@@ -1,74 +1,99 @@
+"use client";
+
 import Link from "next/link";
+import { useMemo } from "react";
 import Container from "@/components/ui/Container";
-import { buttonClassName } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
+
+function TelegramIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      width="27"
+      height="24"
+      viewBox="0 0 27 24"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+    >
+      <path
+        d="M26.6 0.843185L22.3924 22.8111C22.3924 22.8111 21.8037 24.3342 20.1865 23.6037L10.4784 15.8949L10.4334 15.8722C11.7447 14.6528 21.9134 5.18416 22.3578 4.75496C23.0458 4.09025 22.6187 3.69453 21.8199 4.19665L6.79951 14.0753L1.00469 12.0561C1.00469 12.0561 0.0927602 11.7201 0.00502998 10.9897C-0.0838546 10.258 1.03471 9.86227 1.03471 9.86227L24.6584 0.264548C24.6584 0.264548 26.6 -0.618949 26.6 0.843185Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
 
 export default function Header({
   navItems,
   cta,
   contact,
-  lang,
-  langHref,
+  contacts,
+  sticky = true,
 }: {
   navItems: ReadonlyArray<{ label: string; href: string }>;
   cta?: { label: string; href: string };
   contact?: { label?: string; href?: string };
-  lang?: "ru" | "en";
-  langHref?: { ru: string; en: string };
+  contacts?: ReadonlyArray<string>;
+  sticky?: boolean;
 }) {
-  const currentLang = lang ?? "ru";
-  const ruHref = langHref?.ru ?? "#";
-  const enHref = langHref?.en ?? "#";
+
+  const navItemClassName = useMemo(
+    () => "text-[14px] font-[var(--font-body)] text-black hover:text-blue",
+    [],
+  );
 
   return (
-    <header className="sticky top-0 z-50 border-b border-gray bg-beige/80 backdrop-blur">
-      <Container className="flex items-center justify-between gap-6 py-4">
-        <Link href="/" className="font-[var(--font-display)] tracking-tight">
-          Kremnev Atelier
+    <header
+      className={cn(
+        "border-b border-black/10 bg-beige/70 backdrop-blur-xl backdrop-saturate-150",
+        "relative overflow-hidden",
+        "before:absolute before:inset-0 before:pointer-events-none before:bg-gradient-to-b before:from-white/30 before:via-white/10 before:to-white/30",
+        "after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-white/40 after:pointer-events-none",
+        sticky && "sticky top-0 z-50",
+      )}
+    >
+      <Container className="relative z-10 flex h-12 items-center gap-6">
+        <Link href="/" className="inline-flex items-center">
+          <img
+            src="/brand/icon.svg"
+            alt="Kremnev Atelier"
+            className="h-6 w-6"
+          />
         </Link>
 
-        <nav className="hidden items-center gap-6 text-sm text-black/80 md:flex">
+        <nav className="hidden flex-1 items-center gap-[clamp(16px,2.4vw,40px)] md:flex">
           {navItems.map((item) => (
             <Link
               key={item.href + item.label}
               href={item.href}
-              className={cn("hover:text-black")}
+              className={navItemClassName}
             >
               {item.label}
             </Link>
           ))}
-        </nav>
 
-        <div className="flex items-center gap-3">
-          <div
-            className="hidden items-center rounded-full border border-gray bg-white p-1 text-xs font-medium text-black/70 sm:flex"
-            aria-label="Language"
-          >
-            <Link
-              href={ruHref}
-              className={cn(
-                "rounded-full px-3 py-1",
-                currentLang === "ru" ? "bg-beige text-black" : "hover:bg-beige",
-              )}
-            >
-              RU
-            </Link>
-            <Link
-              href={enHref}
-              className={cn(
-                "rounded-full px-3 py-1",
-                currentLang === "en" ? "bg-beige text-black" : "hover:bg-beige",
-              )}
-            >
-              EN
-            </Link>
-          </div>
+          {contacts?.length &&
+            contacts.map((t) => {
+              const isEmail = t.includes("@");
+              const isPhone = t.trim().startsWith("+");
+              const href = isEmail
+                ? `mailto:${t}`
+                : isPhone
+                  ? `tel:${t.replace(/\\s|\\(|\\)|\\-/g, "")}`
+                  : undefined;
+
+              return href ? (
+                <Link key={t} href={href} className={navItemClassName}>
+                  {t}
+                </Link>
+              ) : (
+                <span key={t} className={navItemClassName}>
+                  {t}
+                </span>
+              );
+            })}
 
           {contact?.href ? (
-            <Link
-              href={contact.href}
-              className="hidden text-sm text-black/70 hover:text-black sm:inline"
-            >
+            <Link href={contact.href} className={cn(navItemClassName, "lg:inline-flex")}>
               {contact.label ?? "Contact"}
             </Link>
           ) : null}
@@ -76,12 +101,35 @@ export default function Header({
           {cta ? (
             <Link
               href={cta.href}
-              className={buttonClassName({ variant: "primary" })}
+              className={cn(
+                "group inline-flex items-center gap-[7px] transition-colors duration-150",
+                navItemClassName,
+              )}
             >
-              {cta.label}
+              <span className="transition-colors duration-150 group-hover:text-blue">
+                {cta.label}
+              </span>
+              <span className="relative inline-flex h-[14px] w-[14px] items-center justify-center">
+                <span className="h-[7px] w-[7px] rounded-full bg-black animate-[pulseDot_1.2s_ease-in-out_infinite] transition-opacity group-hover:opacity-0 group-hover:bg-transparent group-hover:[animation-play-state:paused]" />
+                <TelegramIcon
+                  className="absolute h-[14px] w-[14px] opacity-0 transition-opacity group-hover:opacity-100 text-current"
+                  aria-hidden="true"
+                />
+              </span>
             </Link>
           ) : null}
-        </div>
+        </nav>
+
+        <button
+          type="button"
+          className={cn(
+            "inline-flex items-center justify-center rounded-full border border-black/20 px-3 py-2 md:hidden",
+            navItemClassName,
+          )}
+          aria-label="Open menu"
+        >
+          Меню
+        </button>
       </Container>
     </header>
   );

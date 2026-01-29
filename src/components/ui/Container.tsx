@@ -7,9 +7,8 @@ export default function Container({
 }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("mx-auto w-full max-w-6xl px-6", className)}
+      className={cn("layout-padding mx-auto w-full max-w-[1920px]", className)}
       {...props}
     />
   );
 }
-

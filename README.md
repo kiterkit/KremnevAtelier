@@ -108,3 +108,12 @@ cp .env.example .env.local
 
 More dev notes: `docs/dev.md`.
 
+## Layout padding ranges
+
+The shared `layout-padding` utility controls the left/right gutters for every page container.
+
+- **0–600px**: `16px` padding-inline (base mobile).
+- **600–1080px**: `24px` padding-inline.
+- **1080–1440px**: `40px` padding-inline (first 1080–1920 range).
+- **1440–1920px**: `60px` padding-inline (second 1080–1920 slice, via the 1440 breakpoint).
+- **≥1920px**: still `80px` (container max-width is 1920px, so the gutter stays 80px even on larger viewports).
