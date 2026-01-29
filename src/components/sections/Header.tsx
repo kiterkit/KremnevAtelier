@@ -37,17 +37,17 @@ export default function Header({
 }) {
 
   const navItemClassName = useMemo(
-    () => "text-[14px] font-[var(--font-body)] text-black hover:text-blue",
+    () =>
+      "text-[14px] font-[var(--font-body)] text-[var(--foreground)] hover:text-blue transition-colors duration-150",
     [],
   );
 
   return (
     <header
       className={cn(
-        "border-b border-black/10 bg-beige/70 backdrop-blur-xl backdrop-saturate-150",
+        "bg-beige/70 backdrop-blur-xl backdrop-saturate-150 shadow-[0_1px_4px_rgba(27,29,37,0.05)]",
         "relative overflow-hidden",
         "before:absolute before:inset-0 before:pointer-events-none before:bg-gradient-to-b before:from-white/30 before:via-white/10 before:to-white/30",
-        "after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-white/40 after:pointer-events-none",
         sticky && "sticky top-0 z-50",
       )}
     >
@@ -110,7 +110,7 @@ export default function Header({
                 {cta.label}
               </span>
               <span className="relative inline-flex h-[14px] w-[14px] items-center justify-center">
-                <span className="h-[7px] w-[7px] rounded-full bg-black animate-[pulseDot_1.2s_ease-in-out_infinite] transition-opacity group-hover:opacity-0 group-hover:bg-transparent group-hover:[animation-play-state:paused]" />
+                <span className="h-[7px] w-[7px] rounded-full bg-[rgba(27,29,37,0.85)] animate-[pulseDot_1.2s_ease-in-out_infinite] transition-opacity group-hover:opacity-0 group-hover:bg-transparent group-hover:[animation-play-state:paused]" />
                 <TelegramIcon
                   className="absolute h-[14px] w-[14px] opacity-0 transition-opacity group-hover:opacity-100 text-current"
                   aria-hidden="true"
@@ -123,7 +123,7 @@ export default function Header({
         <button
           type="button"
           className={cn(
-            "inline-flex items-center justify-center rounded-full border border-black/20 px-3 py-2 md:hidden",
+          "inline-flex items-center justify-center rounded-full border border-[rgba(27,29,37,0.2)] px-3 py-2 md:hidden",
             navItemClassName,
           )}
           aria-label="Open menu"
