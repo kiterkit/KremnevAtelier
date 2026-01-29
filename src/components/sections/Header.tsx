@@ -60,7 +60,7 @@ export default function Header({
           />
         </Link>
 
-        <nav className="hidden flex-1 items-center gap-[clamp(16px,2.4vw,40px)] md:flex">
+        <nav className="hidden flex-1 items-center justify-between gap-[clamp(16px,2.4vw,40px)] md:flex md:pl-[80px]">
           {navItems.map((item) => (
             <Link
               key={item.href + item.label}
