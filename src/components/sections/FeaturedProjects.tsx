@@ -4,70 +4,84 @@ import Card from "@/components/ui/Card";
 import Heading from "@/components/ui/Heading";
 import { cn } from "@/lib/cn";
 
+function ImagePlaceholder({
+  label,
+  aspect,
+}: {
+  label: string;
+  aspect: `${number}/${number}`;
+}) {
+  return (
+    <div
+      className={cn(
+        `aspect-[${aspect}]`,
+        "bg-gray/10 flex items-center justify-center text-xs text-black/60",
+      )}
+    >
+      IMAGE PLACEHOLDER: {label}
+    </div>
+  );
+}
+
 export default function FeaturedProjects({
-  title,
   items,
+  trust,
   className,
 }: {
-  title: string;
   items: ReadonlyArray<{
     title: string;
-    description?: string;
-    imageSrc?: string;
-    href?: string;
-    tags?: ReadonlyArray<string>;
+    ctaLabel: string;
+    href: string;
+    image: { label: string; aspect: `${number}/${number}` };
   }>;
+  trust?: {
+    label: string;
+    title: string;
+    subtitle: string;
+    body: string;
+    logos: ReadonlyArray<string>;
+  };
   className?: string;
 }) {
   return (
     <section className={cn("py-12", className)}>
       <Container>
-        <div className="flex items-end justify-between gap-6">
-          <Heading as="h2" size="lg">
-            {title}
-          </Heading>
-          <div className="hidden text-sm text-black/60 sm:block">
-            {items.length} selected
-          </div>
-        </div>
-
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
-          {items.slice(0, 2).map((item) => (
-            <Card key={item.title} className="overflow-hidden">
-              <div className="aspect-[16/9] rounded-2xl border border-gray bg-beige" />
-              <Heading as="h3" size="md" className="mt-4 text-base">
-                {item.title}
-              </Heading>
-              {item.description ? (
-                <p className="mt-2 text-sm leading-6 text-black/70">
-                  {item.description}
-                </p>
-              ) : null}
-              {item.tags?.length ? (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {item.tags.map((t) => (
-                    <span
-                      key={t}
-                      className="rounded-full border border-gray bg-white px-3 py-1 text-xs text-black/70"
-                    >
-                      {t}
-                    </span>
-                  ))}
-                </div>
-              ) : null}
-              {item.href ? (
-                <div className="mt-4">
-                  <Link
-                    href={item.href}
-                    className="text-sm font-medium text-blue hover:underline"
-                  >
-                    View project
-                  </Link>
-                </div>
-              ) : null}
+        <div className="grid gap-6 md:grid-cols-2">
+          {items.map((item) => (
+            <Card key={item.title}>
+              <ImagePlaceholder
+                label={item.image.label}
+                aspect={item.image.aspect}
+              />
+              <div className="mt-3 flex items-center justify-between gap-4">
+                <div className="text-sm">{item.title}</div>
+                <Link href={item.href} className="text-sm">
+                  {item.ctaLabel} →
+                </Link>
+              </div>
             </Card>
           ))}
         </div>
+
+        {trust ? (
+          <div className="mt-16 space-y-6">
+            <div className="text-sm">{trust.label}</div>
+            <div className="space-y-2">
+              <Heading as="h2" size="lg">
+                {trust.title}
+              </Heading>
+              <div className="text-sm">{trust.subtitle}</div>
+            </div>
+            <p className="text-sm whitespace-pre-line">{trust.body}</p>
+            <p className="text-sm">
+              {trust.logos.map((l) => (
+                <span key={l} className="mr-6 inline-block">
+                  {l}
+                </span>
+              ))}
+            </p>
+          </div>
+        ) : null}
       </Container>
     </section>
   );

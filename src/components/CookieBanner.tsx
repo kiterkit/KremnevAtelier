@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/cn";
 import { getConsent, type ConsentValue } from "@/lib/consent";
 
@@ -10,7 +10,22 @@ function setConsent(value: ConsentValue) {
 }
 
 export default function CookieBanner() {
-  const [visible, setVisible] = useState(() => getConsent() === null);
+  const [visible, setVisible] = useState(false);
+  const [decided, setDecided] = useState(false);
+
+  useEffect(() => {
+    const current = getConsent();
+    if (current !== null) {
+      setDecided(true);
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      if (!decided && getConsent() === null) {
+        setVisible(true);
+      }
+    }, 1200);
+    return () => window.clearTimeout(timer);
+  }, [decided]);
 
   const containerClassName = useMemo(
     () =>
@@ -44,6 +59,7 @@ export default function CookieBanner() {
               onClick={() => {
                 setConsent("declined");
                 setVisible(false);
+                setDecided(true);
               }}
               type="button"
             >
@@ -54,6 +70,7 @@ export default function CookieBanner() {
               onClick={() => {
                 setConsent("accepted");
                 setVisible(false);
+                setDecided(true);
               }}
               type="button"
             >
