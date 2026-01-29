@@ -27,30 +27,24 @@ export default function Header({
   cta,
   contact,
   contacts,
-  sticky = true,
 }: {
   navItems: ReadonlyArray<{ label: string; href: string }>;
   cta?: { label: string; href: string };
   contact?: { label?: string; href?: string };
   contacts?: ReadonlyArray<string>;
-  sticky?: boolean;
 }) {
 
   const navItemClassName = useMemo(
     () =>
-      "text-[14px] font-[var(--font-body)] text-[var(--foreground)] hover:text-blue transition-colors duration-150",
+      "text-[14px] font-[var(--font-body)] text-[var(--text-primary)] hover:text-blue transition-colors duration-150",
     [],
   );
 
+  const headerClassName =
+    "fixed inset-x-0 top-0 z-50 bg-[rgba(255,255,255,0.28)] border border-[rgba(255,255,255,0.35)] backdrop-blur-[12px] backdrop-saturate-150 shadow-[0_4px_16px_rgba(27,29,37,0.08)] overflow-hidden before:absolute before:inset-0 before:pointer-events-none before:bg-gradient-to-b before:from-white/50 before:via-white/40 before:to-white/10";
+
   return (
-    <header
-      className={cn(
-        "bg-beige/70 backdrop-blur-xl backdrop-saturate-150 shadow-[0_1px_4px_rgba(27,29,37,0.05)]",
-        "relative overflow-hidden",
-        "before:absolute before:inset-0 before:pointer-events-none before:bg-gradient-to-b before:from-white/30 before:via-white/10 before:to-white/30",
-        sticky && "sticky top-0 z-50",
-      )}
-    >
+    <header className={headerClassName}>
       <Container className="relative z-10 flex h-12 items-center gap-6">
         <Link href="/" className="inline-flex items-center">
           <img
@@ -106,11 +100,11 @@ export default function Header({
                 navItemClassName,
               )}
             >
-              <span className="transition-colors duration-150 group-hover:text-blue">
+              <span className="transition-colors duration-150 group-hover:text-[var(--text-primary)]">
                 {cta.label}
               </span>
               <span className="relative inline-flex h-[14px] w-[14px] items-center justify-center">
-                <span className="h-[7px] w-[7px] rounded-full bg-[rgba(27,29,37,0.85)] animate-[pulseDot_1.2s_ease-in-out_infinite] transition-opacity group-hover:opacity-0 group-hover:bg-transparent group-hover:[animation-play-state:paused]" />
+              <span className="h-[7px] w-[7px] rounded-full bg-[rgba(27,29,37,0.4)] animate-[pulseDot_1.2s_ease-in-out_infinite] transition-opacity group-hover:opacity-0 group-hover:bg-transparent group-hover:[animation-play-state:paused]" />
                 <TelegramIcon
                   className="absolute h-[14px] w-[14px] opacity-0 transition-opacity group-hover:opacity-100 text-current"
                   aria-hidden="true"
@@ -123,7 +117,7 @@ export default function Header({
         <button
           type="button"
           className={cn(
-          "inline-flex items-center justify-center rounded-full border border-[rgba(27,29,37,0.2)] px-3 py-2 md:hidden",
+            "inline-flex items-center justify-center border border-[rgba(27,29,37,0.2)] bg-white/60 px-3 py-2 md:hidden hover:text-blue",
             navItemClassName,
           )}
           aria-label="Open menu"
