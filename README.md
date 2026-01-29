@@ -11,6 +11,38 @@ npm run dev
 
 Local dev runs at `http://localhost:3010`.
 
+### Recommended Node version (performance)
+
+This project is tuned for Node.js LTS. Using non‑LTS versions (e.g. Node 25) can make Next dev/build noticeably slower.
+
+- Recommended: Node `22.x` (see `.nvmrc` / `.node-version`)
+- Quick switch (nvm):
+
+```bash
+nvm install 22
+nvm use 22
+```
+
+### Faster dev modes
+
+If `npm run dev` feels heavy, try:
+
+```bash
+npm run dev:turbo
+```
+
+Or force webpack:
+
+```bash
+npm run dev:webpack
+```
+
+Or disable sourcemaps in dev:
+
+```bash
+npm run dev:nosourcemaps
+```
+
 ## Environment
 
 - `NEXT_PUBLIC_SITE_URL=` (optional)

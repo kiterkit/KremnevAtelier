@@ -4,9 +4,16 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3010",
+    "dev:turbo": "next dev -p 3010 --turbo",
+    "dev:webpack": "next dev -p 3010 --webpack",
+    "dev:nosourcemaps": "next dev -p 3010 --disable-source-maps",
     "build": "next build",
     "start": "next start",
     "lint": "eslint ."
+  },
+  "engines": {
+    "node": ">=22 <23",
+    "npm": ">=10"
   },
   "dependencies": {
     "clsx": "^2.1.1",

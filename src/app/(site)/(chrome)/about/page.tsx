@@ -12,7 +12,7 @@ const content = {
   hero: {
     title: "About",
     subtitle:
-      "Neutral placeholder copy. This route exists so navigation works during scaffolding.",
+      "Neutral placeholder copy. This route exists so navigation works during scaffolding. (Dev note: use Node 22 LTS + try `npm run dev:turbo` / `npm run dev:nosourcemaps` if build feels slow.)",
     locationLabel: "Studio",
     primaryCta: { label: "Contact", href: "/contacts" },
     secondaryCta: { label: "Services", href: "/services" },
