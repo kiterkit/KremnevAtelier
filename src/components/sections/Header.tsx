@@ -36,12 +36,12 @@ export default function Header({
 
   const navItemClassName = useMemo(
     () =>
-      "text-[14px] font-[var(--font-body)] text-[var(--text-primary)] hover:text-blue transition-colors duration-150",
+      "text-[14px] font-[var(--font-body)] text-black hover:text-blue transition-colors duration-150",
     [],
   );
 
   const headerClassName =
-    "fixed inset-x-0 top-0 z-50 bg-[rgba(255,255,255,0.28)] border border-[rgba(255,255,255,0.35)] backdrop-blur-[12px] backdrop-saturate-150 shadow-[0_4px_16px_rgba(27,29,37,0.08)] overflow-hidden before:absolute before:inset-0 before:pointer-events-none before:bg-gradient-to-b before:from-white/50 before:via-white/40 before:to-white/10";
+    "fixed inset-x-0 top-0 z-50 bg-[rgba(244,243,241,0.72)] border-b border-black/[0.04] backdrop-blur-[8px] backdrop-saturate-[120%] shadow-[0_1px_6px_rgba(27,29,37,0.04)] overflow-hidden";
 
   return (
     <header className={headerClassName}>
@@ -96,17 +96,15 @@ export default function Header({
             <Link
               href={cta.href}
               className={cn(
-                "group inline-flex items-center gap-[7px] transition-colors duration-150",
+                "group inline-flex items-center gap-[7px]",
                 navItemClassName,
               )}
             >
-              <span className="transition-colors duration-150 group-hover:text-[var(--text-primary)]">
-                {cta.label}
-              </span>
+              {cta.label}
               <span className="relative inline-flex h-[14px] w-[14px] items-center justify-center">
-              <span className="h-[7px] w-[7px] rounded-full bg-[rgba(27,29,37,0.4)] animate-[pulseDot_1.2s_ease-in-out_infinite] transition-opacity group-hover:opacity-0 group-hover:bg-transparent group-hover:[animation-play-state:paused]" />
+                <span className="h-[7px] w-[7px] rounded-full bg-current opacity-40 animate-[pulseDot_1.2s_ease-in-out_infinite] transition-opacity group-hover:animate-none group-hover:opacity-0" />
                 <TelegramIcon
-                  className="absolute h-[14px] w-[14px] opacity-0 transition-opacity group-hover:opacity-100 text-current"
+                  className="absolute h-[14px] w-[14px] opacity-0 transition-opacity group-hover:opacity-100"
                   aria-hidden="true"
                 />
               </span>
@@ -117,7 +115,7 @@ export default function Header({
         <button
           type="button"
           className={cn(
-            "inline-flex items-center justify-center border border-[rgba(27,29,37,0.2)] bg-white/60 px-3 py-2 md:hidden hover:text-blue",
+            "inline-flex items-center justify-center border border-black/10 bg-beige/60 px-3 py-2 md:hidden hover:text-blue",
             navItemClassName,
           )}
           aria-label="Open menu"

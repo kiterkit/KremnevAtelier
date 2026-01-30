@@ -18,8 +18,6 @@ export default function ChromeShell({ children }: { children: ReactNode }) {
         navItems={navItems}
         cta={{ label: "Консультация", href: "/contacts" }}
         contact={{ label: "+1 (000) 000‑00‑00", href: "/contacts" }}
-        lang="ru"
-        langHref={{ ru: "#", en: "#" }}
       />
       <main>
         <Container className="py-10">{children}</Container>

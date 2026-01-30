@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import "./globals.css";
 import CookieBanner from "@/components/CookieBanner";
 import DebugLayoutToggle from "@/app/DebugLayoutToggle";
@@ -50,7 +51,7 @@ export default function RootLayout({
         className={`antialiased font-[var(--font-body)]${debugLayout ? " debug-layout" : ""}`}
         style={bodyStyle}
       >
-        <DebugLayoutToggle />
+        <Suspense fallback={null}><DebugLayoutToggle /></Suspense>
         {children}
         <CookieBanner />
       </body>
