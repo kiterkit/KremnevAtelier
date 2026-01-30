@@ -40,7 +40,6 @@ const slides: Slide[] = [
   },
 ];
 
-const HEADER_H = 48;
 const RIGHT_W = 710;
 const RIGHT_H = 654;
 const LEFT_W = 710;
@@ -243,22 +242,16 @@ function HomeHero({ className }: { className?: string }) {
       style={root}
     >
       {/* ---- logo lettering ---- */}
-      <div
-        className="pointer-events-none absolute flex items-center"
+      <img
+        src="/brand/logo_lettering.svg"
+        alt="Kremnev atelier"
+        className="pointer-events-none absolute"
         style={{
-          top: `${HEADER_H}px`,
           left: 80,
-          height: `calc(100vh - ${LEFT_H}px - ${HEADER_H}px)`,
-          maxWidth: `calc(var(--rl) - ${IMG_GAP}px - ${LEFT_W}px)`,
+          bottom: `${LEFT_H + IMG_GAP}px`,
         }}
-      >
-        <img
-          src="/brand/logo_lettering.svg"
-          alt="Kremnev atelier"
-          className="h-auto max-h-[80px]"
-          draggable={false}
-        />
-      </div>
+        draggable={false}
+      />
 
       {/* ---- right image ---- */}
       <div
