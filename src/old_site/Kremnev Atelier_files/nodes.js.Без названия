@@ -1,0 +1,2871 @@
+(function ($) {
+creatium.init.global(function () {
+    var $section = $('.section-layout');
+
+    var $toggle = $section.find('[cr-layout-left-toggle]');
+
+    $toggle.on('click', function () {
+        if (creatium.layout.mobile) {
+            $section.find('[cr-layout-root]').toggleClass('mobile-left-active');
+        } else {
+            if (cr.layout._left_current) {
+                $('body').removeClass('layout-left-active');
+                $section.find('[cr-layout-root]').removeClass('left-active');
+                cr.layout._left_current = 0;
+            } else {
+                $('body').addClass('layout-left-active');
+                $section.find('[cr-layout-root]').addClass('left-active');
+                cr.layout._left_current = cr.layout.left;
+            }
+        }
+
+        $(window).triggerHandler('resize');
+    });
+});
+creatium.init.global(function () {
+    var user_visit = creatium.store.get('user_visit');
+
+    if (user_visit) {
+        user_visit.last = Date.now();
+        user_visit.count++;
+    } else {
+        user_visit = {
+            first: Date.now(),
+            last: Date.now(),
+            lead: null,
+            count: 1,
+        };
+    }
+
+    $(creatium).on('submit-success', function () {
+        user_visit.lead = Date.now();
+        creatium.store.set('user_visit', user_visit);
+    });
+
+    creatium.store.set('user_visit', user_visit);
+
+    $('.section-modal').each(function () {
+        var section_el = this;
+        var $section = $(section_el);
+        var $modal = $section.find('.modal');
+
+        var $document = $(document);
+
+        var once = $section.data('once');
+        var trigger = $section.data('trigger');
+        var conversionlimit = $section.data('conversionlimit');
+
+        if (once && creatium.store.get('is_triggered_' + trigger)) {
+            return;
+        }
+
+        var was_shown = false;
+        $modal.one('show', function () {
+            was_shown = true;
+            creatium.store.set('is_triggered_' + trigger, true);
+        });
+
+        var should_prevent = function () {
+            if (was_shown) return true;
+
+            if (trigger.indexOf('leadback_') === 0) {
+                if (creatium.store.get('is_converted') !== true) return true;
+            } else {
+                if (conversionlimit && creatium.store.get('is_converted')) return true;
+            }
+
+            return false;
+        };
+
+        if (trigger === 'visit') {
+            if (should_prevent()) return;
+
+            creatium.modals.show($modal);
+        } else if (trigger === 'visit_10sec') {
+            setTimeout(function () {
+                if (should_prevent()) return;
+
+                creatium.modals.show($modal);
+            }, 1000 * 10);
+        }  else if (trigger === 'visit_30sec') {
+            setTimeout(function () {
+                if (should_prevent()) return;
+
+                creatium.modals.show($modal);
+            }, 1000 * 30);
+        }  else if (trigger === 'visit_1min') {
+            setTimeout(function () {
+                if (should_prevent()) return;
+
+                creatium.modals.show($modal);
+            }, 1000 * 60);
+        } else if (trigger === 'visit_2min') {
+            setTimeout(function () {
+                if (should_prevent()) return;
+
+                creatium.modals.show($modal);
+            }, 2000 * 60);
+        } else if (trigger === 'visit_3min') {
+            setTimeout(function () {
+                if (should_prevent()) return;
+
+                creatium.modals.show($modal);
+            }, 3000 * 60);
+        } else if (trigger === 'visit_4min') {
+            setTimeout(function () {
+                if (should_prevent()) return;
+
+                creatium.modals.show($modal);
+            }, 4000 * 60);
+        } else if (trigger === 'return_30min') {
+            if (should_prevent()) return;
+
+            if (user_visit.count === 2 && user_visit.last - user_visit.first < 1000 * 60 * 30) {
+                creatium.modals.show($modal);
+            }
+        } else if (trigger === 'return_day') {
+            if (should_prevent()) return;
+
+            if (user_visit.count === 2 && user_visit.last - user_visit.first < 1000 * 60 * 60 * 24) {
+                creatium.modals.show($modal);
+            }
+        } else if (trigger === 'return_week') {
+            if (should_prevent()) return;
+
+            if (user_visit.count === 3 && user_visit.last - user_visit.first < 1000 * 60 * 60 * 24 * 7) {
+                creatium.modals.show($modal);
+            }
+        } else if (trigger === 'leadback_hour') {
+            if (should_prevent()) return;
+
+            if (user_visit.last - user_visit.lead < 1000 * 60 * 60) {
+                creatium.modals.show($modal);
+            }
+        } else if (trigger === 'leadback_day') {
+            if (should_prevent()) return;
+
+            if (user_visit.last - user_visit.lead < 1000 * 60 * 60 * 24) {
+                creatium.modals.show($modal);
+            }
+        } else if (trigger === 'leadback_week') {
+            if (should_prevent()) return;
+
+            if (user_visit.last - user_visit.lead < 1000 * 60 * 60 * 24 * 7) {
+                creatium.modals.show($modal);
+            }
+        } else if (trigger === 'leadback_month') {
+            if (should_prevent()) return;
+
+            if (user_visit.last - user_visit.lead < 1000 * 60 * 60 * 24 * 30) {
+                creatium.modals.show($modal);
+            }
+        } else if (trigger === 'leave') {
+            $document.on('mouseleave', function (event) {
+                if (should_prevent()) return;
+
+                creatium.modals.show($modal);
+            });
+        } else if (trigger === 'scroll') {
+            $document.on('scroll', function (event) {
+                if (should_prevent()) return;
+
+                var rect = section_el.getBoundingClientRect();
+                if (rect.top > 0 && rect.top < window.innerHeight / 2) {
+                    creatium.modals.show($modal);
+                }
+            });
+        } else if (trigger === 'scroll_back') {
+            var scrolled = false;
+
+            $document.on('scroll', function (event) {
+                if (should_prevent()) return;
+
+                var rect = section_el.getBoundingClientRect();
+
+                if (scrolled) {
+                    if (rect.top > 0) {
+                        creatium.modals.show($modal);
+                    }
+                } else {
+                    if (rect.top + rect.height < 0) {
+                        scrolled = true;
+                    }
+                }
+            });
+        } else if (trigger === 'scroll_back_twice') {
+            var scrolled_1 = false;
+            var scrolled_2 = false;
+            var scrolled_3 = false;
+
+            $document.on('scroll', function (event) {
+                if (should_prevent()) return;
+
+                var rect = section_el.getBoundingClientRect();
+
+                if (scrolled_1) {
+                    if (rect.top > 0) {
+                        scrolled_2 = true;
+                    }
+                } else {
+                    if (rect.top + rect.height < 0) {
+                        scrolled_1 = true;
+                    }
+                }
+
+                if (scrolled_2) {
+                    if (scrolled_3) {
+                        if (rect.top > 0) {
+                            creatium.modals.show($modal);
+                        }
+                    } else {
+                        if (rect.top + rect.height < 0) {
+                            scrolled_3 = true;
+                        }
+                    }
+                }
+            });
+        } else if (trigger === 'scroll_end') {
+            $document.on('scroll', function (event) {
+                if (should_prevent()) return;
+
+                if (window.innerHeight + window.scrollY >= document.body.offsetHeight) {
+                    creatium.modals.show($modal);
+                }
+            });
+        } else if (trigger === 'form_fail_twice') {
+            var errors_count = 0;
+
+            $(creatium).on('submit-error', function () {
+                if (should_prevent()) return;
+
+                errors_count++;
+
+                if (errors_count === 2) {
+                    $(creatium).one('msg-close', function () {
+                        creatium.modals.show($modal);
+                    });
+                }
+            });
+        } else if (trigger === 'modal_twice') {
+            var modals_count = 0;
+
+            $(creatium).on('modal-hide', function (event, modal) {
+                if (should_prevent()) return;
+
+                // работаем только с теми окнами, которые клиент открывает сам
+                if (modal.$section.hasClass('section-modal')) return;
+
+                modals_count++;
+
+                if (modals_count === 2) {
+                    creatium.modals.show($modal);
+                }
+            });
+        }
+    });
+});
+
+creatium.init.global(function () {
+    var $preloader = $('.section-preloader').addClass('preloader-fading');
+
+    setTimeout(function () {
+        $preloader.hide();
+    }, 300);
+});
+creatium.init.global(function () {
+    var $section = $('.section-sidemenu');
+    if (!$section.length) return;
+
+    if (location.host === 'sections.creatium.site') {
+        var $template = $section.find('[cr-menu-page]');
+        $template.clone().insertBefore($template).addClass('highlight-100');
+        $template.clone().insertBefore($template).addClass('highlight-0');
+        $template.clone().insertBefore($template).addClass('highlight-0');
+        $template.clone().insertBefore($template).addClass('highlight-0');
+
+        return;
+    }
+
+    var $sections = $('.node.section:visible:not(.section-modal, .section-helper, .section-sidemenu, .fixation-top, .fixation-bottom)');
+
+    var $template = $section.find('[cr-menu-page]');
+    $sections.each(function () {
+        var $section = $(this);
+
+        var $dot = $template.clone().insertBefore($template);
+
+        $dot.addClass('highlight-0').data('highlight', 0);
+
+        $dot.on('click', function () {
+            creatium.scrollTo($section);
+        });
+    });
+    $template.remove();
+
+    var $dots = $section.find('[cr-menu-page]');
+
+    var scroll_handler = _.throttle(function () {
+        // Разделяем на 2 цикла, чтобы разделить этапы чтения DOM и записи
+        $sections.each(function (index) {
+            var $section = $(this);
+
+            var rect = this.getBoundingClientRect();
+
+            // В FF, при высоте экрана 437 пикселей, значение bottom
+            // самой нижней секции может быть 437.2166748046875, например
+            var top = Math.round(rect.top);
+            var bottom = Math.round(rect.bottom);
+
+            var win_height = $(window).height();
+
+            var highlight = 0;
+            if (bottom < 0 || top > win_height) highlight = 0;
+            else if (top >= 0 && bottom <= win_height) highlight = 1;
+            else if (top < 0) highlight = bottom / win_height;
+            else if (bottom > win_height) highlight = 1 - top / win_height;
+
+            if (highlight < 0) highlight = 0;
+            if (highlight > 1) highlight = 1;
+
+            $section.data('highlight2', Math.round(highlight * 10) * 10);
+        }).each(function (index) {
+            var $section = $(this);
+            var $dot = $dots.eq(index);
+
+            var highlight = $section.data('highlight2');
+
+            if ($section.data('highlight') !== highlight) {
+                $dot.removeClass('highlight-' + $dot.data('highlight'));
+                $dot.addClass('highlight-' + highlight).data('highlight', highlight);
+            }
+        });
+    }, 100);
+
+    $(document).on('scroll', scroll_handler);
+    scroll_handler();
+
+    if (creatium.scroll.snapping) {
+        creatium.syncInterval(scroll_handler, 500);
+    }
+});
+
+creatium.init.global(function () {
+    creatium.lazy.add($('.section-slider'), function init($section) {
+        if (!window.Swiper) return setTimeout(function () {
+            init($section);
+        }, 50);
+
+        var filter = function () {
+            return $(this).closest('.node')[0] === $section[0];
+        };
+
+        var $container = $section.find('.swiper-container').filter(filter);
+        var $next = $section.find('[cr-slider-next]').filter(filter);
+        var $previous = $section.find('[cr-slider-previous]').filter(filter);
+        var $pages = $section.find('[cr-slider-page]').filter(filter);
+        var $index = $section.find('[cr-slider-index]').filter(filter);
+
+        var params = $container.data();
+
+        var $icons = $section.find('[cr-slider-page_icon]').filter(filter).filter(function () {
+            return $(this).find('>.svgwrap').length > 1;
+        });
+        $icons.find('>.svgwrap').addClass('hidden');
+
+        var $labels = $section.find('[cr-slider-page_label]').filter(filter)
+            .filter(function () {
+                return $(this).find('>.textable').length > 1;
+            });
+        $labels.find('>.textable').addClass('hidden');
+
+        var swiper = new Swiper($container.get(0), {
+            autoHeight: params.fixheight === false,
+            autoplay: params.auto ? {
+                delay: params.pause,
+                stopOnLastSlide: !params.loop,
+            } : false,
+            allowTouchMove: params.touch,
+            effect: params.animated ? 'slide' : 'fade',
+            fadeEffect: { crossFade: true },
+            touchEventsTarget: 'container',
+            mousewheelEventsTarged: 'container',
+            on: {
+                slideChange: function () {
+                    $pages.filter('.is-active').removeClass('is-active');
+                    $pages.eq(swiper.activeIndex).addClass('is-active');
+
+                    setIcon(swiper.oldActiveIndex, swiper.activeIndex);
+                    setLabel(swiper.oldActiveIndex, swiper.activeIndex);
+
+                    $index.text(swiper.activeIndex + 1);
+
+                    swiper.oldActiveIndex = swiper.activeIndex;
+                },
+            },
+        });
+        $section.data('api-swiper', swiper);
+
+        swiper._params = params;
+        swiper.oldActiveIndex = swiper.activeIndex;
+
+        setIcon(swiper.oldActiveIndex, swiper.activeIndex);
+
+        function setIcon(oldIndex, newIndex) {
+            $icons.each(function () {
+                var $svgwraps = $(this).children('.svgwrap');
+                $svgwraps.eq(oldIndex).addClass('hidden');
+                $svgwraps.eq(newIndex).removeClass('hidden');
+            });
+        }
+
+        setLabel(swiper.oldActiveIndex, swiper.activeIndex);
+
+        function setLabel(oldIndex, newIndex) {
+            $labels.each(function () {
+                var $textables = $(this).children('.textable');
+                $textables.eq(oldIndex).addClass('hidden');
+                $textables.eq(newIndex).removeClass('hidden');
+            });
+        }
+
+        $section.on('slidenext', function (event) {
+            if (swiper.isEnd && params.loop) {
+                swiper.slideTo(0);
+            } else {
+                swiper.slideNext();
+            }
+
+            // если слайдер в другом слайдере, чтобы не листались оба
+            event.stopPropagation();
+        });
+
+        $next.on('click', function () {
+            $section.trigger('slidenext');
+        });
+
+        $section.on('slideprev', function (event) {
+            if (swiper.isBeginning && params.loop) {
+                swiper.slideTo(swiper.slides.length - 1);
+            } else {
+                swiper.slidePrev();
+            }
+
+            // если слайдер в другом слайдере, чтобы не листались оба
+            event.stopPropagation();
+        });
+
+        $previous.on('click', function () {
+            $section.trigger('slideprev');
+        });
+
+        $pages.on('click', function () {
+            swiper.slideTo($(this).index());
+        });
+
+        $section.find('.lazy').on('lazyload', _.throttle(function () {
+            swiper.update();
+        }, 500));
+
+        if (swiper.params.autoHeight) {
+            creatium.syncInterval(function () {
+                if (swiper.animating || !swiper.slides.length) return;
+
+                var wrapperHeight = swiper.wrapperEl.clientHeight;
+                var slideHeight = swiper.slides[swiper.activeIndex].clientHeight;
+                if (wrapperHeight !== slideHeight) swiper.update();
+            }, 40);
+        }
+    });
+});
+
+creatium.init.local(function ($root) {
+    $root.find('.widget-before-after').each(function () {
+        var $widget = $(this);
+        var $root = $widget.find('.root');
+
+        var $imgs = $root.find('> img');
+        var $handler = $root.find('> .handler');
+
+        $imgs.on('load', _.after($imgs.length, function () {
+            $root.css('height', $root.height());
+
+            var $layerBefore = $root.find('> .layer-before');
+            var $wrapBefore = $layerBefore.find('> .wrap');
+            var $imageBefore = $imgs.eq(0);
+            var imageLeftWidth = $imageBefore.width();
+            var imageLeftHeight = $imageBefore.height();
+            $imageBefore.removeAttr('style').appendTo($wrapBefore);
+
+            var $layerAfter = $root.find('> .layer-after');
+            var $wrapAfter = $layerAfter.find('> .wrap');
+            var $imageAfter = $imgs.eq(1);
+            var imageRightWidth = $imageAfter.width();
+            var imageRightHeight = $imageAfter.height();
+            $imageAfter.removeAttr('style').appendTo($wrapAfter);
+
+            $wrapBefore.add($wrapAfter).css({
+                'width': Math.max(imageLeftWidth, imageRightWidth),
+                'height': Math.max(imageLeftHeight, imageRightHeight),
+                'max-width': 'none',
+            });
+
+            var clickOffset = 0;
+
+            var eventHandler = function (event) {
+                var eventX = event.pageX;
+
+                if (eventX === undefined) {
+                    eventX = event.originalEvent.touches[0].pageX;
+                }
+
+                var rootWidth = $root.width();
+                var rootLeft = $root[0].getBoundingClientRect().left;
+                var wrapWidth = $wrapBefore.width();
+                var wrapLeft = $wrapBefore[0].getBoundingClientRect().left;
+
+                var mouseLeft = eventX - rootLeft - clickOffset;
+
+                if (mouseLeft < 0) mouseLeft = 0;
+                if (mouseLeft > rootWidth) mouseLeft = rootWidth;
+
+                $layerBefore.css('width', mouseLeft);
+                $layerAfter.css('width', rootWidth - mouseLeft);
+
+                $wrapBefore.css('right', - (rootWidth / 2 - mouseLeft));
+                $wrapAfter.css('left', rootWidth / 2 - (mouseLeft));
+
+                $handler.css('left', mouseLeft);
+                var handlerLeft = $handler[0].getBoundingClientRect().left + 2;
+
+                if (handlerLeft < wrapLeft) {
+                    $handler.css('left', mouseLeft + wrapLeft - handlerLeft);
+                }
+
+                if (handlerLeft > (wrapLeft + wrapWidth)) {
+                    $handler.css('left', mouseLeft - (handlerLeft - (wrapLeft + wrapWidth)));
+                }
+
+                event.stopPropagation();
+            };
+
+            $root.on('touchstart', function (event) {
+                eventX = event.originalEvent.touches[0].pageX;
+
+                if ($(event.target).closest($handler).length) {
+                    clickOffset = eventX - $handler[0].getBoundingClientRect().left;
+                } else {
+                    clickOffset = 0;
+                }
+
+                $(document).on('touchmove.beforeafter', eventHandler);
+                $(document).one('touchend', function () {
+                    $(document).off('touchmove.beforeafter');
+                });
+
+                event.preventDefault();
+                event.stopPropagation();
+            });
+
+            if ($root.data('trigger') === 'hover') {
+                $root.on('mousemove', eventHandler);
+                $root.on('mousedown', function (event) {
+                    event.preventDefault();
+                });
+            } else if ($root.data('trigger') === 'drag') {
+                $root.on('mousedown', function (event) {
+                    if ($(event.target).closest($handler).length) {
+                        clickOffset = event.pageX - $handler[0].getBoundingClientRect().left;
+                    } else {
+                        clickOffset = 0;
+                    }
+
+                    $(document).on('mousemove.beforeafter', eventHandler);
+                    $(document).one('mouseup', function () {
+                        $(document).off('mousemove.beforeafter');
+                    });
+
+                    event.preventDefault();
+                    event.stopPropagation();
+                });
+            }
+        }));
+    });
+});
+creatium.init.local(function ($root) {
+    $root.find('.widget-button').each(function () {
+        var $widget = $(this);
+
+        var filter = function () {
+            return $(this).closest('.widget-button')[0] === $widget[0];
+        };
+
+        var $btn = $widget.find('button').filter(filter);
+
+        if ($btn.is('[data-action="slideprev"]')) {
+            $btn.click(function () {
+                $widget.closest('.widget-slider, .widget-tabs, .widget-form2, .section-slider').trigger('slideprev');
+            });
+        }
+
+        if ($btn.is('[data-action="slidenext"]')) {
+            $btn.click(function () {
+                $widget.closest('.widget-slider, .widget-tabs, .widget-form2, .section-slider').trigger('slidenext');
+            });
+        }
+
+        const $cartCount = $widget.find('.btn-cart-count');
+        if ($cartCount.length) {
+            var updater = function () {
+                var count = 0;
+
+                _.each(creatium.cart.list, function (item) {
+                    var amount = _.filter(item, { type: 'amount' })[0].value * 1;
+                    count += amount;
+                });
+
+                $cartCount.text(count);
+            };
+
+            updater();
+            $(creatium).on('cart-change', updater);
+        }
+    });
+});
+
+creatium.init.local(function ($root) {
+    $root.find('.widget-cart').each(function () {
+        var $cart = $(this);
+
+        var $cont_full = $cart.find('.js-cart-full').first();
+        var $cont_empty = $cart.find('.js-cart-empty').first();
+
+        var state;
+
+        if (creatium.cart.list.length === 0) {
+            $cont_full.hide();
+            state = 'empty';
+        } else {
+            $cont_empty.hide();
+            state = 'full';
+        }
+
+        var updater = function () {
+            if (creatium.cart.list.length === 0) {
+                $cont_empty.show();
+                $cont_full.hide();
+            } else {
+                $cont_full.show();
+                $cont_empty.hide();
+            }
+        };
+
+        updater();
+        $(creatium).on('cart-change', updater);
+    });
+});
+// TODO Этот код перестал работать еще до 3.3, и никто не заметил - нужно его восстановить
+// creatium.init.local(function ($root) {
+//     $root.find('.widget-cart-image').each(function() {
+//         var $cbox = $(this).find('.colorbox');
+//
+//         if (!$cbox.length) return;
+//
+//         $cbox.colorbox({
+//             maxWidth: '80%',
+//             maxHeight: '80%'
+//         });
+//     });
+// });
+creatium.init.local(function ($root) {
+    var blankgif = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+
+    $root.find('.widget-cart-list').each(function () {
+        var $widget = $(this);
+
+        var $template = $widget.children('script');
+        var template = $template.text().replace(/<\/_script>/g, '</script>');
+        $template.remove();
+
+        var updater = function () {
+            var $items = $widget.children('.cont');
+
+            creatium.cart.list.forEach(function (item) {
+                var name = _.filter(item, { type: 'title' })[0];
+                var price = _.filter(item, { type: 'price' })[0];
+                var amount = _.filter(item, { type: 'amount' })[0];
+                var photo = _.filter(item, { type: 'photo' })[0];
+
+                var $item = $items.filter(function () {
+                    return $(this).data('item') === item;
+                });
+
+                if ($item.length) {
+                    // Обновление
+
+                    $item.find('[data-role="setamount"]').val(amount.value);
+                    $item.find('[data-role="itemprice"]').html(price.value);
+                } else {
+                    // Добавление
+
+                    var $item = $(template);
+                    $widget.append($item);
+                    $item.data('item', item);
+
+                    $item.find('[data-role="setamount"]').val(amount.value);
+                    $item.find('[data-role="itemprice"]').html(price.value);
+                    $item.find('[data-role="itemname"]').html(name.value);
+                    $item.find('[data-role="itemphoto"]').attr(
+                        'data-lazy-bgimage', photo.value || blankgif
+                    );
+
+                    $item.find('[data-role="removefromcart"]').on('click', function () {
+                        creatium.cart.remove(item);
+                    });
+
+                    $item.find('[data-role="setamount"]').on('change', function () {
+                        var value = $(this).val() * 1;
+                        creatium.cart.setAmount(item, value);
+                    });
+
+                    $item.find('[data-role="increaseamount"]').on('click', function () {
+                        var value = amount.value + 1;
+                        creatium.cart.setAmount(item, value);
+                    });
+
+                    $item.find('[data-role="decreaseamount"]').on('click', function () {
+                        var value = amount.value - 1;
+                        creatium.cart.setAmount(item, value);
+                    });
+
+                    console.time('cart add trigger');
+                    creatium.init.trigger($item[0]);
+                    console.timeEnd('cart add trigger');
+                }
+            });
+
+            $items.each(function () {
+                var $item = $(this);
+
+                var item = $item.data('item');
+
+                if (creatium.cart.list.indexOf(item) < 0) {
+                    // Удаление
+
+                    $item.slideUp(250, function () {
+                        $item.remove();
+                    });
+                }
+            });
+        };
+
+        // Отсрочка нужна, чтобы сначала выполнился creatium.init.global,
+        // а только потом на страницу были добавлены новые компоненты в корзине
+        setTimeout(updater, 10);
+        $(creatium).on('cart-change', updater);
+    });
+});
+creatium.init.local(function ($root) {
+    $root.find('.widget-cart-total').each(function () {
+        var $widget = $(this);
+
+        var updater = function () {
+            var total = 0;
+            var currency;
+
+            _.each(creatium.cart.list, function (item) {
+                var amount = _.filter(item, { type: 'amount' })[0].value * 1;
+                var price = _.filter(item, { type: 'price' })[0].value;
+
+                total += creatium.cart.getPrice(price) * amount;
+                currency = currency || creatium.cart.getCurrency(price);
+            });
+
+            if (!creatium.cart.list.length) {
+                var result = '-';
+            } else {
+                total = Number.isInteger(total) ? total : total.toFixed(2);
+                var result = currency.replace('%s%', total);
+            }
+
+            $widget.find('[data-role="carttotal"] span').html(result);
+        };
+
+        updater();
+        $(creatium).on('cart-change', updater);
+    });
+});
+
+creatium.init.local(function ($root) {
+    $root.find('.widget-cms-table').each(function () {
+        var $widget = $(this);
+        var $root = $widget.find('.cms-table-root');
+
+        var table = $root.data('table');
+        var template = $root.data('template');
+
+        $.ajax(creatium.origin + '/app/cms/0.2/getAll', {
+            type: 'POST',
+            data: {},
+            dataType: 'json',
+            contentType: 'application/json',
+            success: function (data, status, xhr) {
+                console.log('CMS: getAll success', data);
+
+                try {
+                    $root.html(_.template(template, _.find(data.tables, { name: table })));
+                } catch (e) {
+                    console.error('CMS: template error', e);
+
+                    var $alert = $('<div class="alert alert-danger" style="margin: 0;"></div>');
+                    $alert.html(e.toString());
+                    $root.empty().append($alert);
+                }
+            },
+            error: function (data, status, xhr) {
+                console.log('CMS: getAll error', data);
+
+                var $alert = $('<div class="alert alert-danger" style="margin: 0;"></div>');
+                $alert.html('Cannot read data from server');
+                $root.empty().append($alert);
+            },
+        });
+    });
+});
+
+creatium.init.local(function ($root) {
+    $root.find('.widget-comments-fb').each(function () {
+        var $widget = $(this);
+
+        var $fb = $widget.find('.fb');
+
+        if ($fb.length) {
+            var fbjoint = $fb.attr('data-joint') === 'true';
+            var href = 'http://' + location.host.replace(/^www\./, '');
+
+            if (!fbjoint) {
+                href += '/' + location.pathname;
+            }
+
+            $fb.attr('data-href', href);
+            $fb.attr('data-width', $fb.width());
+
+            $('head').append('<meta property="fb:app_id" content="' + $fb.data('apiid') + '"/>');
+            $('<div id="fb-root"></div>').appendTo('body');
+
+            (function(d, s, id) {
+                var js, fjs = d.getElementsByTagName(s)[0];
+                if (d.getElementById(id)) return;
+                js = d.createElement(s); js.id = id;
+                js.src = "//connect.facebook.net/ru_RU/sdk.js#xfbml=1&version=v2.8";
+                fjs.parentNode.insertBefore(js, fjs);
+            }(document, 'script', 'facebook-jssdk'));
+        }
+    });
+});
+
+var inthash = function(str) {
+    return _.reduce(str, function(res, sym, key) {
+        return res + sym.charCodeAt() * Math.pow(key + 5, 5);
+    }, str.length);
+};
+
+creatium.init.local(function ($root) {
+    $root.find('.widget-comments-vk').each(function () {
+        var $widget = $(this);
+
+        var $vk = $widget.find('.vk');
+
+        if ($vk.length && $vk.data('apiid')) {
+            var id = _.uniqueId('vk_comments');
+            $vk.attr('id', id);
+
+            var vkjoint = $vk.attr('data-joint') === 'true';
+            var page_id = 1;
+
+            if (!vkjoint) {
+                page_id = inthash(location.host.replace(/^www\./, '') + '/' + location.pathname);
+            }
+
+            $.getScript("//vk.com/js/api/openapi.js?112", function () {
+                VK.init({
+                    apiId: $vk.data('apiid'),
+                    onlyWidgets: true
+                });
+
+                VK.Widgets.Comments(id, {
+                    limit: 5,
+                    width: $vk.width(),
+                    attach: "*"
+                }, page_id);
+            });
+        }
+    });
+});
+function ourDay(theirDay) {
+    if (theirDay > 0) return theirDay - 1;
+    if (theirDay === 0) return 6;
+}
+
+creatium.init.local(function ($root) {
+    $root.find('.widget-countdown').each(function() {
+        var $widget = $(this);
+        $widget.children('.metahtml').show();
+
+        var $root = $widget.find('[cr-countdown-root]');
+        var settings = $root.data('vals');
+        var variables = $root.data('variables') || {};
+        var now = new Date;
+
+        // Этот код должен быть синхронизирован с кодом в node.js
+        var date;
+        if (settings.type === 'full') {
+            settings.full_date.day++;
+            date = new Date(settings.full_date.year, settings.full_date.month, settings.full_date.day, settings.full_time.hour, settings.full_time.minute);
+        } else if (settings.type === 'month') {
+            settings.month_day++;
+            date = new Date(now.getFullYear(), now.getMonth(), settings.month_day, settings.month_time.hour, settings.month_time.minute);
+            if (date.getTime() < now.getTime()) {
+                date = new Date(now.getFullYear(), now.getMonth() + 1, settings.month_day, settings.month_time.hour, settings.month_time.minute);
+            }
+        } else if (settings.type === 'week') {
+            var add = settings.week_day - ourDay(now.getDay());
+            date = new Date(now.getFullYear(), now.getMonth(), now.getDate() + add, settings.week_time.hour, settings.week_time.minute);
+            if (date.getTime() < now.getTime()) {
+                add = 7 - ourDay(now.getDay()) + settings.week_day;
+                date = new Date(now.getFullYear(), now.getMonth(), now.getDate() + add, settings.week_time.hour, settings.week_time.minute);
+            }
+        } else if (settings.type === 'day') {
+            date = new Date(now.getFullYear(), now.getMonth(), now.getDate(), settings.day_time.hour, settings.day_time.minute);
+            if (date.getTime() < now.getTime()) {
+                date = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, settings.day_time.hour, settings.day_time.minute);
+            }
+        } else if (settings.type === 'fake') {
+            var hash = [settings.fake_days, settings.fake_time.hour, settings.fake_time.minute].join(':');
+            if (creatium.store.get(hash)) {
+                date = new Date(creatium.store.get(hash));
+            } else {
+                date = new Date(now.getFullYear(), now.getMonth(), now.getDate() + settings.fake_days, now.getHours() + settings.fake_time.hour, now.getMinutes() + settings.fake_time.minute);
+                creatium.store.set(hash, date.getTime());
+            }
+        }
+
+        var timezone = settings.type === 'fake' || settings.timezone === 'default' ? null : settings.timezone;
+
+        if (settings.action.type === "show_element") {
+            $('#' + settings.action.element_id).hide();
+        }
+
+        var onExpiry = function() {
+            if (settings.action.type === 'message') {
+                creatium['msg_' + settings.action.message.type](settings.action.message.title, settings.action.message.text);
+            }
+
+            if (settings.action.type === 'redirect') {
+                if (settings.action.url) {
+                    location.href = settings.action.url;
+                }
+            }
+
+            if (settings.action.type === 'show_element') {
+                $('#' + settings.action.element_id).show();
+            }
+
+            if (settings.action.type === 'hide_element') {
+                $('#' + settings.action.element_id).hide();
+            }
+
+            if (settings.action.type === 'show_popup') {
+                creatium.modals.show($widget.find('.modal').filter(function () {
+                    return $(this).closest('.node')[0] === $widget[0];
+                }));
+            }
+
+            if ($widget.data('api-expired') !== true) {
+                $widget.data('api-expired', true);
+                $widget.triggerHandler('api-expiry');
+            }
+        };
+
+        var countdown = keithWoodCountdown(window.creatium.lang);
+        var updater = creatium.watchDom($widget[0]);
+
+        var tick = function () {
+            if ($widget.data('api-expired')) return;
+
+            updater(_.extend(variables, countdown(date, timezone)));
+            $widget.triggerHandler('api-tick');
+
+            if (date < new Date()) onExpiry();
+        };
+
+        tick();
+        creatium.syncInterval(tick, 1000);
+
+        $widget.data('api-until', countdown.getUntil());
+
+        $widget.data('api-setUntil', function (date2) {
+            date = new Date(date2);
+
+            if (date.getTime() < new Date().getTime()) return;
+
+            timezone = null;
+            $widget.data('api-until', date);
+            $widget.data('api-expired', false);
+            tick();
+        });
+    });
+});
+
+creatium.init.local(function ($root) {
+    $root.find('.widget-defer').each(function () {
+        var $defer = $(this);
+
+        setTimeout(function () {
+            $defer.show();
+        }, $defer.data('timeout') * 1000)
+    });
+});
+creatium.init.global(function () {
+    creatium.syncInterval(function () {
+        var $active = $(document.activeElement).closest('.widget-field');
+
+        if ($active.length ) {
+            // Чтобы класс is-filled был актуальным
+            $active.find('input').triggerHandler('input');
+        }
+    }, 250);
+});
+
+creatium.init.local(function ($root) {
+    creatium.lazy.add($root.find('.widget-field'), function ($field) {
+        var $form = $field.closest('[data-form]');
+
+        var vals = $field.find('.metahtml').first().data('vals');
+
+        var list = [];
+        $field.find('[data-item-text][data-item-value]').each(function () {
+            list.push({
+                text: $(this).attr('data-item-text'),
+                value: $(this).attr('data-item-value') * 1 || 0,
+            });
+        });
+
+        if (!vals) return;
+
+        var original;
+
+        $field.find('.is-text').each(function () {
+            var $text = $(this);
+
+            $text.find('input, textarea').on('input', function () {
+                if ($(this).val().length) {
+                    if (!$text.hasClass('is-filled')) $text.addClass('is-filled');
+                } else {
+                    if ($text.hasClass('is-filled')) $text.removeClass('is-filled');
+                }
+            });
+        });
+
+        if (["name", "phone", "email", "count", "text", "password", "hidden"].indexOf(vals.type) >= 0) {
+            original = $field.find('input').val();
+
+            $form.on('reset', function () {
+                $field.find('input').val(original);
+            });
+
+            $field.data('api-setValue', function (value) {
+                $field.find('input').val(value);
+            });
+
+            if ($field.is('[data-prefill]')) {
+                original = $field.attr('data-prefill');
+                $field.data('api-setValue')(original);
+            }
+        }
+
+        if (vals.type === 'textarea') {
+            original = $field.find('textarea').val();
+            $form.on('reset', function () {
+                $field.find('textarea').val(original);
+            });
+
+            $field.data('api-setValue', function (value) {
+                $field.find('textarea').val(value);
+            });
+
+            if ($field.is('[data-prefill]')) {
+                original = $field.attr('data-prefill');
+                $field.data('api-setValue')(original);
+            }
+        }
+
+        if (vals.type === 'hackable') {
+            original = $field.find('[cr-field]').attr('data-value');
+            $form.on('reset', function () {
+                $field.find('[cr-field]').attr('data-value', original);
+            });
+
+            var typing = $field.find('[cr-field]').attr('data-type');
+            $field.data('api-setValue', function (value) {
+                // Приводим значение к строке
+                value = value.toString();
+
+                // А дальше к нужному типу
+                if (typing === 'number') {
+                    value = value * 1 || 0;
+                } else if (typing === 'boolean') {
+                    value = value === '1' || value === 'true';
+                }
+
+                $field.find('[cr-field]').attr('data-value', value);
+            });
+
+            if ($field.is('[data-prefill]')) {
+                original = $field.attr('data-prefill');
+                $field.data('api-setValue')(original);
+            }
+        }
+
+        if (vals.type === 'checkbox-list' || vals.type === 'checkbox-visual') {
+            original = _.map($field.find('input'), function (el) {
+                return $(el).prop('checked');
+            });
+
+            $form.on('reset', function () {
+                $field.find('input').each(function (index) {
+                    $(this).prop('checked', original[index]);
+                });
+            });
+
+            $field.data('api-setValue', function (value) {
+                $field.find('input').each(function (index) {
+                    var item = list[index];
+
+                    if (value[item.text] !== undefined) {
+                        $(this).prop('checked', value[item.text]);
+                    }
+                });
+            });
+
+            if ($field.is('[data-prefill]')) {
+                var prefill = {};
+
+                $field.attr('data-prefill').split(',').forEach(function (part) {
+                    prefill[part.trim()] = true;
+                });
+
+                $field.data('api-setValue')(prefill);
+
+                original = _.map($field.find('input'), function (el) {
+                    return $(el).prop('checked');
+                });
+            }
+        }
+
+        if (vals.type === 'checkbox-input') {
+            original = $field.find('input').prop('checked');
+            $form.on('reset', function () {
+                $field.find('input').prop('checked', original);
+            });
+
+            $field.data('api-setValue', function (value) {
+                $field.find('input').prop('checked', value);
+            });
+
+            if ($field.is('[data-prefill]')) {
+                original = $field.attr('data-prefill') !== '0';
+                $field.data('api-setValue')(original);
+            }
+        }
+
+        if (vals.type === 'privacy-checkbox') {
+            original = $field.find('input').prop('checked');
+            $form.on('reset', function () {
+                $field.find('input').prop('checked', original);
+            });
+
+            $field.data('api-setValue', function (value) {
+                $field.find('input').prop('checked', value);
+            });
+        }
+
+        if (vals.type === 'radio-list' || vals.type === 'radio-visual') {
+            original = _.map($field.find('input'), function (el) {
+                return $(el).prop('checked');
+            });
+
+            $form.on('reset', function () {
+                $field.find('input').each(function (index) {
+                    $(this).prop('checked', original[index]);
+                });
+            });
+
+            $field.on('change', function (event) {
+                $field.find('input').filter(function () {
+                    return this !== event.target;
+                }).prop('checked', false);
+            });
+
+            $field.data('api-setValue', function (value) {
+                $field.find('input').prop('checked', false);
+
+                $field.find('input').each(function (index) {
+                    var item = list[index];
+
+                    if (item.text === value) {
+                        $(this).prop('checked', true);
+                    }
+                });
+            });
+
+            if ($field.is('[data-prefill]')) {
+                $field.data('api-setValue')($field.attr('data-prefill'));
+                original = _.map($field.find('input'), function (el) {
+                    return $(el).prop('checked');
+                });
+            }
+        }
+
+        if (vals.type === 'select-menu') {
+            $field.find('select option').eq(0).attr('value', '');
+            $field.find('select option').slice(1).each(function (index) {
+                $(this).attr('value', index);
+            });
+
+            original = $field.find('select').val();
+            $form.on('reset', function () {
+                $field.find('select').val(original);
+                $field.triggerHandler('change');
+            });
+
+            $field.on('change', function (event) {
+                $field.find('[cr-field_value]').text($field.find('select option:selected').text());
+            });
+
+            $field.data('api-setValue', function (value) {
+                if (value) {
+                    var item = _.find(list, { text: value });
+                    var index = list.indexOf(item);
+
+                    if (index >= 0) {
+                        $field.find('select').val(index);
+                    } else {
+                        $field.find('select').val('');
+                    }
+                } else {
+                    $field.find('select').val('');
+                }
+
+                $field.triggerHandler('change');
+            });
+
+            if ($field.is('[data-prefill]')) {
+                $field.data('api-setValue')($field.attr('data-prefill'));
+                original = $field.find('select').val();
+            }
+        }
+
+        if (vals.type === 'slider') {
+            var $root = $field.find('[cr-field-input]');
+            $root.find('style').insertAfter($root);
+            $root.empty();
+
+            original = $root.attr('value') * 1 || 0;
+
+            var $input = $('<input>').val(original).appendTo($root);
+
+            var options = {
+                force_edges: true,
+                min: vals.min,
+                max: vals.max,
+                step: vals.step,
+                from: original,
+            };
+
+            // Задержка нужна, потому что иначе появляется Forced synchronous layouts,
+            // и это видно во вкладке Perfomance. Если снова начнет повторяться,
+            // можно попробовать убрать задержку, или использовать _.setTimeout
+            // с несколькими произвольными миллисекундами
+            window.requestAnimationFrame(function init() {
+                if (!$.fn.ionRangeSlider) {
+                    return setTimeout(init, 50);
+                }
+
+                $input.ionRangeSlider(options);
+
+                if ($field.is('[data-prefill]')) {
+                    original = $field.attr('data-prefill') * 1 || 0;
+                    $field.data('api-setValue')(original);
+                }
+            });
+
+            $form.on('reset', function () {
+                $input.data("ionRangeSlider").update(options);
+            });
+
+            $field.data('api-setValue', function (value) {
+                var options2 = _.clone(options);
+                options2.from = value;
+                $input.data("ionRangeSlider").update(options2);
+            });
+        }
+
+        if (vals.type === 'file') {
+            var $state = $field.find('[cr-field_state]');
+            $state.data('original-html', $state.html());
+
+            var $clean = $field.find('[cr-field_clean]');
+            $clean.hide();
+            $clean.on('click', function () {
+                $field.find(':file').val('');
+                $state.html($state.data('original-html'));
+                $field.data('result', null);
+                $clean.hide();
+            });
+
+            $form.on('reset', function () {
+                if ($field.is('[data-prefill]')) {
+                    $field.data('api-setValue')([$field.attr('data-prefill')]);
+                } else {
+                    $clean.click();
+                }
+            });
+
+            $field.on('change', function handler(event) {
+                if (!$.fn.ajaxSubmit) return setTimeout(function () {
+                    handler(event);
+                }, 50);
+
+                // на данном этапе форме не нужно знать об изменении
+                event.stopPropagation();
+
+                var $fileinput = $field.find(':file');
+
+                var match = $fileinput.val().match(/.+[\/\\](.+)/);
+                if (!match) return;
+
+                var filename = match[1];
+
+                // оригинал заменяем копией
+                $fileinput.clone().insertAfter($fileinput);
+
+                if (cr.mini) {
+                    var $fileform = $('<form>').append($fileinput);
+                    const formData = new FormData($fileform[0]);
+
+                    $state.text(filename + ' (0%)');
+                    creatium.execute_backend_scenario($field.data('upload-scenario'), formData, {}).then(function (result) {
+                        $field.data('result', result.url);
+                        $state.text(filename);
+                        $clean.show();
+
+                        $form.trigger('change');
+
+                        $fileform.remove();
+                    }, function (error) {
+                        creatium.msg_error(creatium.l10n("Ошибка загрузки!"), error.message);
+
+                        $state.html($state.data('original-html'));
+                        $field.data('result', null);
+
+                        $form.trigger('change');
+
+                        $fileform.remove();
+                    });
+                } else {
+                    var $fileform = $('<form>').attr({
+                        'action': creatium.origin + '/app/' + creatium.VERSION + '/file',
+                        'method': 'POST',
+                        'enctype': 'multipart/form-data',
+                    });
+
+                    var $pageinput = $('<input>').attr({
+                        'type': 'hidden',
+                        'name': 'ImageUploadForm[page]',
+                        'value': creatium.page_id,
+                    });
+
+                    $fileform.append($fileinput);
+                    $fileform.append($pageinput);
+
+                    $fileform.appendTo('body').hide();
+
+                    $fileform.ajaxSubmit({
+                        dataType: 'json',
+                        beforeSend: function() {
+                            return $state.text(filename + ' (0%)');
+                        },
+                        uploadProgress: function(event, position, total, percentComplete) {
+                            return $state.text(filename + ' (' + percentComplete + '%)');
+                        },
+                        success: function(result) {
+                            $field.data('result', result);
+                            $state.text(filename);
+                            $clean.show();
+
+                            $form.trigger('change');
+
+                            $fileform.remove();
+                        },
+                        error: function(xhr) {
+                            creatium.msg_error(creatium.l10n("Ошибка загрузки!"), xhr.status === 400 ? xhr.responseText : null);
+
+                            $state.html($state.data('original-html'));
+                            $field.data('result', null);
+
+                            $form.trigger('change');
+
+                            $fileform.remove();
+                        },
+                    });
+                }
+            });
+
+            $field.data('api-setValue', function (value) {
+                var file = value[0];
+
+                if (file) {
+                    var match = file.match(/.+[\/\\](.+)/);
+                    if (!match) file = null;
+                }
+
+                if (file) {
+                    var filename = match[1];
+
+                    $field.data('result', file);
+                    $state.text(filename);
+                    $clean.show();
+                } else {
+                    $state.html($state.data('original-html'));
+                    $field.data('result', null);
+                }
+            });
+
+            if ($field.is('[data-prefill]')) {
+                $field.data('api-setValue')([$field.attr('data-prefill')]);
+            }
+        }
+    });
+});
+creatium.async.ready(function () {
+    creatium.init.local(function ($root) {
+        creatium.lazy.then($root.find('.widget-form2'), function ($widget) {
+            var filter = function () {
+                return $(this).closest('.widget')[0] === $widget[0];
+            };
+
+            var $container = $widget.find('.swiper-container').filter(filter);
+
+            // если форма не пошаговая
+            if (!$container.length) return;
+
+            var swiper = new Swiper($container.get(0), {
+                autoHeight: $container.attr('data-fixheight') === 'false',
+                autoplay: false,
+                allowTouchMove: false,
+                effect: $container.attr('data-animated') === 'true' ? 'slide' : 'fade',
+                fadeEffect: { crossFade: true },
+                touchEventsTarget: 'container',
+                mousewheelEventsTarged: 'container',
+                // Без этой настройки малейшее движение курсора во время клика
+                // сбрасывает попытку отметить галочку в форме
+                preventClicks: false,
+                on: {
+                    slideChangeTransitionStart: function () {
+                        // чтобы поля обновились
+                        $widget.trigger('change');
+                    }
+                },
+            });
+            $widget.data('api-swiper', swiper);
+
+            if ($widget.closest('.modal').length) {
+                $widget.closest('.modal').on('shown.bs.modal', function () {
+                    swiper.update();
+                    $widget.trigger('change');
+                })
+            }
+
+            // для нормальной инициации внутри модального окна
+            creatium.lazy.add($widget, function () {
+                swiper.update();
+            });
+
+            $widget.find('.lazy').on('lazyload', _.throttle(function () {
+                swiper.update();
+            }, 500));
+
+            if (swiper.params.autoHeight) {
+                creatium.syncInterval(function () {
+                    if (swiper.animating || !swiper.slides.length) return;
+
+                    var wrapperHeight = swiper.wrapperEl.clientHeight;
+                    var slideHeight = swiper.slides[swiper.activeIndex].clientHeight;
+                    if (wrapperHeight !== slideHeight) swiper.update();
+                }, 40);
+            }
+        });
+    });
+});
+
+creatium.init.local(function ($root) {
+    $root.find('.widget-hamburger').each(function () {
+        var $widget = $(this);
+
+        var filter = function () {
+            return $(this).closest('.widget-hamburger')[0] === $widget[0];
+        };
+
+        var $toggle = $widget.find('[cr-hamburger-toggle]').filter(filter);
+        var $container = $widget.find('[cr-hamburger-menu]').filter(filter);
+
+        if ($container.hasClass('is-collapsed')) {
+            creatium.lazy.add($widget, function ($el) {
+                $container.show();
+                creatium.lazy.force($container);
+                $container.hide();
+            });
+        }
+
+        $toggle.on('click', function () {
+            if ($container.is(':animated')) return;
+
+            $toggle.toggleClass('is-collapsed');
+            $container.toggleClass('is-collapsed');
+
+            $toggle.toggleClass('is-expanded');
+            $container.toggleClass('is-expanded');
+
+            if (scroll_fix) {
+                $container.toggle();
+            } else {
+                $container.slideToggle();
+            }
+        });
+
+        // Автоскрытие гамбургера по переходу по любой ссылке
+        // Делается в 3 шага
+        var scroll_fix = false;
+
+        $(creatium).on('before-scroll-to', function () {
+            if ($container.hasClass('is-expanded')) {
+                // Отключаем анимацию меню
+                scroll_fix = true;
+
+                // 1. Скрываем меню, чтобы высота фиксированной панели была пересчитана
+                $toggle.click();
+            }
+        });
+
+        $(creatium).on('after-scroll-to', function () {
+            if (scroll_fix) {
+                // 2. Возвращаем меню, как ни в чем ни бывало
+                $toggle.click();
+
+                // Включаем обратно анимацию меню
+                scroll_fix = false;
+
+                // 3. Теперь скрываем меню с анимацией, красиво
+                $toggle.click();
+            }
+        });
+    })
+});
+
+creatium.init.local(function ($root) {
+    $root.find('.widget-hover').each(function () {
+        var $widget = $(this);
+
+        var $hover = $widget.find('[cr-hover]').filter(function () {
+            return $(this).closest('.widget-hover')[0] === $widget[0];
+        });
+
+        $hover.on('mouseenter', function (event) {
+            if ($(event.relatedTarget).closest($hover).length) {
+                // Часть ховера может быть вынесена за пределы компонента,
+                // и так мы ловим переход курсора с одной части ховера на вынесенную
+                return;
+            }
+
+            $hover.addClass('hover');
+            $hover.addClass('animated');
+
+            $widget.triggerHandler('api-before-over');
+
+            setTimeout(function () {
+                $hover.removeClass('animated');
+
+                $widget.triggerHandler('api-over');
+            }, $hover.data('duration'));
+        });
+
+        $hover.on('mouseleave', function (event) {
+            if ($(event.relatedTarget).closest($hover).length) {
+                // Часть ховера может быть вынесена за пределы компонента,
+                // и так мы ловим переход курсора с одной части ховера на вынесенную
+                return;
+            }
+
+            $hover.removeClass('hover');
+            $hover.addClass('animated');
+
+            $widget.triggerHandler('api-before-out');
+
+            setTimeout(function () {
+                $hover.removeClass('animated');
+
+                $widget.triggerHandler('api-out');
+            }, $hover.data('duration'));
+        });
+    })
+});
+
+creatium.init.global(function () {
+    $('.widget-html .code[data-html]').each(function () {
+        var $code = $(this);
+
+        creatium.lazy.add($code, function ($el) {
+            $el.html($el.data('html'));
+            $el.removeAttr('data-html');
+        });
+    });
+});
+
+creatium.init.local(function init($root) {
+    if (!window.stackEffects) return setTimeout(function () {
+        init($root);
+    }, 50);
+
+    $root.find('.widget-image').each(function() {
+        $(this).find('.stack-image-content').each(function () {
+            var $imgStack, options;
+            $imgStack = $(this);
+            options = $imgStack.attr('stack_hover_effect');
+            if (options) {
+                options = JSON.parse(options);
+                stackEffects.getInstance(options.effectType, $imgStack.get(0), {
+                    effectType: options.effectType,
+                    disableScale: options.disableScale,
+                    style: options.style
+                });
+            }
+            return $imgStack.removeAttr('stack_hover_effect');
+        });
+    });
+});
+creatium.init.local(function ($root) {
+    $root.find('.widget-increasingdigits').each(function () {
+        var searchDigitsPattern = new RegExp("([0-9]+)", "g"),
+                digitsWrapper = "<span class='digits-wrapper'>$1</span>",
+                $digitsContainer = $(this).find('.digits');
+
+            var animationDuration = parseFloat($digitsContainer.attr('data-animation-duration')) * 1000 || 0;
+
+            $digitsContainer.find('*').andSelf().each(function () {
+                var textNodeId = 3;
+
+                $(this)
+                    .contents()
+                    .filter(function () {
+                        return this.nodeType === textNodeId;
+                    })
+                        .each(function () {
+                            var $digitsContainer = $(this).parent(),
+                                wrappedTextNodeVal = this.textContent.replace(searchDigitsPattern, digitsWrapper);
+
+                            $(this).replaceWith(wrappedTextNodeVal);
+
+                            $digitsContainer.find('.digits-wrapper').each(function() {
+                                $(this)
+                                    .data('data-number', $(this).text())
+                                    .text('0');
+                            })
+                        })
+            })
+
+        creatium.lazy.add($(this), function init($el) {
+            if (!$.fn.animateNumber) return setTimeout(function () {
+                init($el);
+            }, 50);
+
+            $el.find('.digits-wrapper').each(function () {
+                $(this).animateNumber({ number: $(this).data('data-number') }, animationDuration);
+            })
+        })
+    })
+});
+
+
+
+creatium.init.local(function ($root) {
+    $root.find('.widget-list').each(function () {
+        var $widget = $(this);
+
+        $widget.find('.lazy-loader').one('lazyload', function () {
+            var file = $(this).attr('src');
+            $widget.find('li').css('background-image', 'url("' + file + '")');
+        });
+    })
+});
+
+
+
+creatium.init.local(function ($root) {
+    $root.find('.widget-pagination').each(function () {
+        var $widget = $(this);
+
+        $widget.find('[href="#"]').on('click', function (event) {
+            // Во избежание прокрутки к верху страницы
+            event.preventDefault();
+        });
+    })
+});
+
+
+
+creatium.init.local(function ($root) {
+    $root.find('.widget-slide-share').each(function() {
+        var $slideContainer = $(this).find('.slide');
+        var userInputString = $slideContainer.attr('data-iframe-string');
+
+        if (userInputString) {
+            var match = userInputString.match(/.*?src="(.*?)"/);
+
+            if (match) {
+                var url = match[1];
+
+                if (url) {
+                    $slideContainer.append('<iframe class="slide-share" src=' + url + ' allowfullscreen></iframe>');
+                }
+            }
+        }
+    })
+});
+
+creatium.async.ready(function () {
+    creatium.init.local(function ($root) {
+        creatium.lazy.add($root.find('.widget-slider'), function ($widget) {
+            var filter = function () {
+                return $(this).closest('.widget')[0] === $widget[0];
+            };
+
+            var $container = $widget.find('.swiper-container').filter(filter);
+            var $next = $widget.find('[cr-slider-next]').filter(filter);
+            var $previous = $widget.find('[cr-slider-previous]').filter(filter);
+            var $pages = $widget.find('[cr-slider-page]').filter(filter);
+            var $index = $widget.find('[cr-slider-index]').filter(filter);
+
+            var params = $container.data();
+
+            var $icons = $widget.find('[cr-slider-page_icon]').filter(filter).filter(function () {
+                return $(this).find('>.svgwrap').length > 1;
+            });
+            $icons.find('>.svgwrap').addClass('hidden');
+
+            var $labels = $widget.find('[cr-slider-page_label]').filter(filter)
+                .filter(function () {
+                    return $(this).find('>.textable').length > 1;
+                });
+            $labels.find('>.textable').addClass('hidden');
+
+            var swiper = new Swiper($container.get(0), {
+            nested: $widget.closest('.swiper-container').length,
+            autoHeight: params.fixheight === false,
+            autoplay: params.auto ? {
+                delay: params.pause,
+                stopOnLastSlide: !params.loop,
+            } : false,
+            allowTouchMove: params.touch,
+            effect: params.animated ? 'slide' : 'fade',
+            fadeEffect: { crossFade: true },
+            touchEventsTarget: 'container',
+            mousewheelEventsTarged: 'container',
+            on: {
+                slideChange: function () {
+                    $pages.filter('.is-active').removeClass('is-active');
+                    $pages.eq(swiper.activeIndex).addClass('is-active');
+
+                        setIcon(swiper.oldActiveIndex, swiper.activeIndex);
+                        setImage(swiper.oldActiveIndex, swiper.activeIndex);
+                        setLabel(swiper.oldActiveIndex, swiper.activeIndex);
+
+                        $index.text(swiper.activeIndex + 1);
+
+                        swiper.oldActiveIndex = swiper.activeIndex;
+                    },
+                },
+            });
+            $widget.data('api-swiper', swiper);
+
+            swiper._params = params;
+            swiper.oldActiveIndex = swiper.activeIndex;
+
+            setIcon(swiper.oldActiveIndex, swiper.activeIndex);
+
+            function setIcon(oldIndex, newIndex) {
+                $icons.each(function () {
+                    var $svgwraps = $(this).children('.svgwrap');
+                    $svgwraps.eq(oldIndex).addClass('hidden');
+                    $svgwraps.eq(newIndex).removeClass('hidden');
+                });
+            }
+
+            setImage(swiper.oldActiveIndex, swiper.activeIndex);
+
+            function setImage(oldIndex, newIndex) {
+                $icons.each(function () {
+                    var $images = $(this).children();
+                    $images.eq(oldIndex).addClass('hidden');
+                    $images.eq(newIndex).removeClass('hidden');
+                });
+            }
+
+            setLabel(swiper.oldActiveIndex, swiper.activeIndex);
+
+            function setLabel(oldIndex, newIndex) {
+                $labels.each(function () {
+                    var $textables = $(this).children('.textable');
+                    $textables.eq(oldIndex).addClass('hidden');
+                    $textables.eq(newIndex).removeClass('hidden');
+                });
+            }
+
+            $widget.on('slidenext', function (event) {
+                if (swiper.isEnd && params.loop) {
+                    swiper.slideTo(0);
+                } else {
+                    swiper.slideNext();
+                }
+            });
+
+            $next.on('click', function () {
+                $widget.triggerHandler('slidenext');
+            });
+
+            $widget.on('slideprev', function (event) {
+                if (swiper.isBeginning && params.loop) {
+                    swiper.slideTo(swiper.slides.length - 1);
+                } else {
+                    swiper.slidePrev();
+                }
+            });
+
+            $previous.on('click', function () {
+                $widget.triggerHandler('slideprev');
+            });
+
+            $pages.on('click', function () {
+                swiper.slideTo($(this).index());
+            });
+
+            $widget.find('.lazy').on('lazyload', _.throttle(function () {
+                swiper.update();
+            }, 500));
+
+            if (swiper.params.autoHeight) {
+                creatium.syncInterval(function () {
+                    if (swiper.animating || !swiper.slides.length) return;
+
+                    var wrapperHeight = swiper.wrapperEl.clientHeight;
+                    var slideHeight = swiper.slides[swiper.activeIndex].clientHeight;
+                    if (wrapperHeight !== slideHeight) swiper.update();
+                }, 40);
+            }
+        });
+    });
+});
+
+creatium.init.local(function ($root) {
+    creatium.lazy.add($root.find('.widget-slider-gallery'), function init($widget) {
+        if (!window.Swiper) return setTimeout(function () {
+            init($widget);
+        }, 50);
+
+        var filter = function () {
+            return $(this).closest('.widget')[0] === $widget[0];
+        };
+
+        var $container = $widget.find('.swiper-container').filter(filter);
+        var $next = $widget.find('[cr-slider-next]').filter(filter);
+        var $previous = $widget.find('[cr-slider-previous]').filter(filter);
+        var $pages = $widget.find('[cr-slider-page]').filter(filter);
+        var $index = $widget.find('[cr-slider-index]').filter(filter);
+
+        var params = $container.data();
+
+        var swiper = new Swiper($container.get(0), {
+            nested: $widget.closest('.swiper-container').length,
+            autoHeight: params.fixheight === false,
+            autoplay: params.auto ? {
+                delay: params.pause,
+                stopOnLastSlide: !params.loop,
+            } : false,
+            allowTouchMove: params.touch,
+            effect: params.animated ? 'slide' : 'fade',
+            fadeEffect: { crossFade: true },
+            touchEventsTarget: 'container',
+            mousewheelEventsTarged: 'container',
+            on: {
+                slideChange: function () {
+                    $pages.filter('.is-active').removeClass('is-active');
+                    $pages.eq(swiper.activeIndex).addClass('is-active');
+
+                    $index.text(swiper.activeIndex + 1);
+
+                    swiper.oldActiveIndex = swiper.activeIndex;
+                },
+            },
+        });
+        $widget.data('api-swiper', swiper);
+
+        swiper._params = params;
+        swiper.oldActiveIndex = swiper.activeIndex;
+
+        $widget.on('slidenext', function (event) {
+            if (swiper.isEnd) {
+                swiper.slideTo(0);
+            } else {
+                swiper.slideNext();
+            }
+        });
+
+        $next.on('click', function () {
+            $widget.triggerHandler('slidenext');
+        });
+
+        $widget.on('slideprev', function (event) {
+            if (swiper.isBeginning) {
+                swiper.slideTo(swiper.slides.length - 1);
+            } else {
+                swiper.slidePrev();
+            }
+        });
+
+        $previous.on('click', function () {
+            $widget.triggerHandler('slideprev');
+        });
+
+        $pages.on('click', function () {
+            swiper.slideTo($(this).index());
+        });
+
+        // для нормальной инициации внутри модального окна
+        creatium.lazy.add($widget, function () {
+            swiper.update();
+        });
+
+        $widget.find('.lazy').on('lazyload', function () {
+            swiper.update();
+        });
+    });
+});
+
+/*
+ *  @author Vikky Shostak https://koddr.me
+ *  @copyright Copyright (c) 2016, Koddr
+ *  @license http://opensource.org/licenses/MIT The MIT License (MIT)
+ *  @version 3.2.9 at 12/09/2016 (22:45)
+ *
+ *  goodshare.js
+ *
+ *  Useful jQuery plugin that will help your website visitors share a link on
+ *  social networks and microblogs. Easy to install and configuring on any of
+ *  your website!
+ *
+ *  @category jQuery plugin
+ */
+;(function ($, window, document, undefined) {
+  $(document).ready(function () {
+    /*
+     *  Variables
+     */
+    var metaOGDescription = $('meta[property="og:description"]').attr('content') || '';
+    var metaOGImage = $('meta[property="og:image"]').attr('content') || '';
+    /*
+     *  Main function
+     */
+    goodshare = {
+      init: function (_element, _options) {
+        /*
+         *  Default options:
+         *
+         *  type = vk
+         *  url = current browser adress stroke
+         *  title = current document <title>
+         *  text = current document <meta property="og:description" ... />
+         *  image = current document <meta property="og:image" ... />
+         */
+        var self = goodshare, options = $.extend({
+          type: 'vk',
+          url: location.href,
+          title: document.title,
+          text: metaOGDescription,
+          image: metaOGImage
+        }, $(_element).data(), _options);
+        /*
+         *  Open popup
+         */
+        if (self.popup(link = self[options.type](options)) !== null) return false;
+      },
+      /*
+       *  Share link > Vkontakte
+       *  @see http://vk.com
+       */
+      vk: function (_options) {
+        var options = $.extend({
+          url: location.href,
+          title: document.title,
+          text: metaOGDescription,
+          image: metaOGImage
+        }, _options);
+        return 'http://vk.com/share.php?'
+          + 'url=' + encodeURIComponent(options.url)
+          + '&title=' + encodeURIComponent(options.title)
+          + '&description=' + encodeURIComponent(options.text)
+          + '&image=' + encodeURIComponent(options.image);
+      },
+      /*
+       *  Share link > Odnoklassniki
+       *  @see http://ok.ru
+       */
+      ok: function (_options) {
+        var options = $.extend({
+          url: location.href,
+          title: document.title
+        }, _options);
+        return 'http://www.odnoklassniki.ru/dk?st.cmd=addShare&st.s=1'
+          + '&st.comments=' + encodeURIComponent(options.title)
+          + '&st._surl=' + encodeURIComponent(options.url);
+      },
+      /*
+       *  Share link > Facebook
+       *  @see http://facebook.com
+       */
+      fb: function (_options) {
+        var options = $.extend({
+          url: location.href,
+          title: document.title
+        }, _options);
+        return 'https://facebook.com/sharer/sharer.php?'
+          + 'u=' + encodeURIComponent(options.url);
+      },
+      /*
+       *  Share link > LiveJournal
+       *  @see http://livejournal.com
+       */
+      lj: function (_options) {
+        var options = $.extend({
+          url: location.href,
+          title: document.title,
+          text: metaOGDescription
+        }, _options);
+        return 'http://livejournal.com/update.bml?'
+          + 'subject=' + encodeURIComponent(options.title)
+          + '&event=' + encodeURIComponent('<a href="' + options.url + '">' + options.title + '</a> ' + options.text);
+      },
+      /*
+       *  Share link > Twitter
+       *  @see http://twitter.com
+       */
+      tw: function (_options) {
+        var options = $.extend({
+          url: location.href,
+          title: document.title
+        }, _options);
+        return 'https://x.com/intent/tweet?'
+          + 'url=' + encodeURIComponent(options.url)
+          + '&text=' + encodeURIComponent(options.title);
+      },
+      /*
+       *  Share link > Google Plus
+       *  @see http://plus.google.com
+       */
+      gp: function (_options) {
+        var options = $.extend({
+          url: location.href
+        }, _options);
+        return 'https://plus.google.com/share?'
+          + 'url=' + encodeURIComponent(options.url);
+      },
+      /*
+       *  Share link > My@Mail.Ru
+       *  @see http://my.mail.ru
+       */
+      mr: function (_options) {
+        var options = $.extend({
+          url: location.href,
+          title: document.title,
+          text: metaOGDescription,
+          image: metaOGImage
+        }, _options);
+        return 'http://connect.mail.ru/share?'
+          + 'url=' + encodeURIComponent(options.url)
+          + '&title=' + encodeURIComponent(options.title)
+          + '&description=' + encodeURIComponent(options.text)
+          + '&imageurl=' + encodeURIComponent(options.image);
+      },
+      /*
+       *  Share link > LinkedIn
+       *  @see http://linkedin.com
+       */
+      li: function (_options) {
+        var options = $.extend({
+          url: location.href,
+          title: document.title,
+          text: metaOGDescription
+        }, _options);
+        return 'http://www.linkedin.com/shareArticle?'
+          + 'url=' + encodeURIComponent(options.url)
+          + '&text=' + encodeURIComponent(options.title)
+          + '&summary=' + encodeURIComponent(options.text)
+          + '&mini=true';
+      },
+      /*
+       *  Share link > tumblr
+       *  @see http://tumblr.com
+       */
+      tm: function (_options) {
+        var options = $.extend({
+          url: location.href,
+          title: document.title,
+          text: metaOGDescription
+        }, _options);
+        return 'https://www.tumblr.com/widgets/share/tool?'
+          + 'canonicalUrl=' + encodeURIComponent(options.url)
+          + '&title=' + encodeURIComponent(options.title)
+          + '&caption=' + encodeURIComponent(options.text)
+          + '&posttype=link';
+      },
+      /*
+       *  Share link > Blogger
+       *  @see https://www.blogger.com
+       */
+      bl: function (_options) {
+        var options = $.extend({
+          url: location.href,
+          title: document.title
+        }, _options);
+        return 'https://www.blogger.com/blog-this.g?'
+          + 'u=' + encodeURIComponent(options.url)
+          + '&n=' + encodeURIComponent(options.title);
+      },
+      /*
+       *  Share link > Pinterest
+       *  @see http://www.pinterest.com
+       */
+      pt: function (_options) {
+        var options = $.extend({
+          url: location.href,
+          title: document.title,
+          image: $('meta[property="og:image"]').attr('content')
+        }, _options);
+        return 'https://www.pinterest.com/pin/create/button/?'
+          + 'url=' + encodeURIComponent(options.url)
+          + '&media=' + encodeURIComponent(options.image)
+          + '&description=' + encodeURIComponent(options.title);
+      },
+      /*
+       *  Share link > Evernote
+       *  @see http://www.evernote.com
+       */
+      en: function (_options) {
+        var options = $.extend({
+          url: location.href,
+          title: document.title,
+          text: metaOGDescription
+        }, _options);
+        return 'https://www.evernote.com/clip.action?'
+          + 'url=' + encodeURIComponent(options.url)
+          + '&title=' + encodeURIComponent(options.title)
+          + '&body=' + encodeURIComponent(options.text + '<br/><a href="' + options.url + '">' + options.title + '</a>');
+      },
+      /*
+       *  Share link > Digg
+       *  @see http://www.digg.com
+       */
+      di: function (_options) {
+        var options = $.extend({
+          url: location.href,
+          title: document.title
+        }, _options);
+        return 'http://digg.com/submit?'
+          + 'url=' + encodeURIComponent(options.url)
+          + '&title=' + encodeURIComponent(options.title);
+      },
+      /*
+       *  Share link > Reddit
+       *  @see http://www.reddit.com
+       */
+      rd: function (_options) {
+        var options = $.extend({
+          url: location.href,
+          title: document.title
+        }, _options);
+        return 'http://www.reddit.com/submit?'
+          + 'url=' + encodeURIComponent(options.url)
+          + '&title=' + encodeURIComponent(options.title);
+      },
+      /*
+       *  Share link > Delicious
+       *  @see https://delicious.com
+       */
+      de: function (_options) {
+        var options = $.extend({
+          url: location.href,
+          title: document.title
+        }, _options);
+        return 'https://delicious.com/save?'
+          + 'url=' + encodeURIComponent(options.url)
+          + '&title=' + encodeURIComponent(options.title);
+      },
+      /*
+       *  Share link > StumbleUpon
+       *  @see http://www.stumbleupon.com
+       */
+      su: function (_options) {
+        var options = $.extend({
+          url: location.href,
+          title: document.title
+        }, _options);
+        return 'http://www.stumbleupon.com/submit?'
+          + 'url=' + encodeURIComponent(options.url)
+          + '&title=' + encodeURIComponent(options.title);
+      },
+      /*
+       *  Share link > Pocket
+       *  @see https://getpocket.com
+       */
+      po: function (_options) {
+        var options = $.extend({
+          url: location.href,
+          title: document.title
+        }, _options);
+        return 'https://getpocket.com/save?'
+          + 'url=' + encodeURIComponent(options.url)
+          + '&title=' + encodeURIComponent(options.title);
+      },
+      /*
+       *  Share link > Surfingbird
+       *  @see http://www.surfingbird.ru
+       */
+      sb: function (_options) {
+        var options = $.extend({
+          url: location.href,
+          title: document.title,
+          text: metaOGDescription
+        }, _options);
+        return 'http://surfingbird.ru/share?'
+          + 'url=' + encodeURIComponent(options.url)
+          + '&title=' + encodeURIComponent(options.title)
+          + '&description=' + encodeURIComponent(options.text);
+      },
+      /*
+       *  Share link > LiveInternet
+       *  @see http://www.liveinternet.ru
+       */
+      lr: function (_options) {
+        var options = $.extend({
+          url: location.href,
+          title: document.title
+        }, _options);
+        return 'http://www.liveinternet.ru/journal_post.php?action=n_add&'
+          + 'cnurl=' + encodeURIComponent(options.url)
+          + '&cntitle=' + encodeURIComponent(options.title);
+      },
+      /*
+       *  Share link > Buffer
+       *  @see http://buffer.com
+       */
+      bf: function (_options) {
+        var options = $.extend({
+          url: location.href,
+          title: document.title
+        }, _options);
+        return 'https://buffer.com/add?'
+          + 'url=' + encodeURIComponent(options.url)
+          + '&text=' + encodeURIComponent(options.title);
+      },
+      /*
+       *  Share link > Instapaper
+       *  @see https://www.instapaper.com
+       */
+      ip: function (_options) {
+        var options = $.extend({
+          url: location.href,
+          title: document.title
+        }, _options);
+        return 'https://www.instapaper.com/edit?'
+          + 'url=' + encodeURIComponent(options.url)
+          + '&title=' + encodeURIComponent(options.title);
+      },
+      /*
+       *  Share link > Readability
+       *  @see http://www.readability.com
+       */
+      ra: function (_options) {
+        var options = $.extend({
+          url: location.href
+        }, _options);
+        return 'http://www.readability.com/save?'
+          + 'url=' + encodeURIComponent(options.url);
+      },
+      /*
+       *  Share link > Xing
+       *  @see https://www.xing.com
+       */
+      xi: function (_options) {
+        var options = $.extend({
+          url: location.href
+        }, _options);
+        return 'https://www.xing.com/spi/shares/new?'
+          + 'url=' + encodeURIComponent(options.url);
+      },
+      /*
+       *  Share link > WordPress
+       *  @see https://www.wordpress.com
+       */
+      wp: function (_options) {
+        var options = $.extend({
+          url: location.href,
+          title: document.title,
+          text: metaOGDescription,
+          image: metaOGImage
+        }, _options);
+        return 'https://wordpress.com/wp-admin/press-this.php?'
+          + 'u=' + encodeURIComponent(options.url)
+          + '&t=' + encodeURIComponent(options.title)
+          + '&s=' + encodeURIComponent(options.text)
+          + '&i=' + encodeURIComponent(options.image)
+          + '&v=2'
+      },
+      /*
+       *  Share link > Baidu
+       *  @see http://www.baidu.com
+       */
+      bd: function (_options) {
+        var options = $.extend({
+          url: location.href,
+          title: document.title,
+          text: metaOGDescription
+        }, _options);
+        return 'http://cang.baidu.com/do/add?'
+          + 'it=' + encodeURIComponent(options.title)
+          + '&iu=' + encodeURIComponent(options.url)
+          + '&dc=' + encodeURIComponent(options.text)
+          + '&fr=ien';
+      },
+      /*
+       *  Share link > Renren
+       *  @see http://www.renren.com
+       */
+      rr: function (_options) {
+        var options = $.extend({
+          url: location.href,
+          title: document.title
+        }, _options);
+        return 'http://share.renren.com/share/buttonshare.do?'
+          + 'link=' + encodeURIComponent(options.url)
+          + '&title=' + encodeURIComponent(options.title);
+      },
+      /*
+       *  Share link > Weibo
+       *  @see http://www.weibo.com
+       */
+      wb: function (_options) {
+        var options = $.extend({
+          url: location.href,
+          title: document.title
+        }, _options);
+        return 'http://service.weibo.com/share/share.php?'
+          + 'url=' + encodeURIComponent(options.url)
+          + '&title=' + encodeURIComponent(options.title);
+      },
+      /*
+       *  Mobile > Share link > Telegram
+       *  @see https://telegram.org/faq
+       *  @category iOS, Android devices
+       */
+      tg: function (_options) {
+        var options = $.extend({
+          url: location.href,
+          title: document.title
+        }, _options);
+        return 'tg://msg?'
+          + 'text=' + encodeURIComponent(options.title + ' ' + options.url);
+      },
+      /*
+       *  Mobile > Share link > Viber
+       *  @see http://www.viber.com/ru/developers/share_on_viber
+       *  @category iOS, Android devices
+       */
+      vi: function (_options) {
+        var options = $.extend({
+          url: location.href,
+          title: document.title
+        }, _options);
+        return 'viber://forward?'
+          + 'text=' + encodeURIComponent(options.title + ' ' + options.url);
+      },
+      /*
+       *  Mobile > Share link > WhatsApp
+       *  @see http://whatsapp-sharing.com
+       *  @category iOS, Android devices
+       */
+      wa: function (_options) {
+        var options = $.extend({
+          url: location.href,
+          title: document.title
+        }, _options);
+        return 'whatsapp://send?'
+          + 'text=' + encodeURIComponent(options.title + ' ' + options.url);
+      },
+      /*
+       *  Mobile > Share link > LINE
+       *  @see https://media.line.me/howto/en/
+       *  @category iOS, Android devices
+       */
+      ln: function (_options) {
+        var options = $.extend({
+          url: location.href,
+          title: document.title
+        }, _options);
+        return 'line://msg/text/'
+          + encodeURIComponent(options.title + ' ' + options.url);
+      },
+      /*
+       *  Popup window
+       */
+      popup: function (url) {
+        return window.open(url, '', 'left=' + (screen.width - 630) / 2 + ',top=' + (screen.height - 440) / 2 + ',toolbar=0,status=0,scrollbars=0,menubar=0,location=0,width=630,height=440');
+      }
+    };
+    /*
+     *  Function getCount()
+     *  Set count to all elements with data-counter attribute.
+     *
+     *  @example $(document).getCount(); // Get all counters
+     */
+    $.fn.getCount = function () {
+      /*
+       *  Function roundCount()
+       *  Return rounded and pretty value of share count.
+       *
+       *  @example roundCount(response.shares) // Rounded value of Facebook counter
+       */
+      var roundCount = function (number) {
+        if (number > 999 && number <= 999999) var result = number / 1000 + 'k';
+        else if (number > 999999) var result = '>1M';
+        else var result = number;
+        return result;
+      };
+      /*
+       *  Function existCount()
+       *  Check exist counter element.
+       *
+       *  @example existCount('[data-counter="fb"]') // Checked exist Facebook counter element
+       */
+      var existCount = function (element) {
+        return ($(element).length > 0);
+      };
+      /*
+       *  Share counter > Vkontakte
+       *  @see http://vk.com/dev
+       */
+      if (existCount('[data-counter="vk"]')) {
+        $.getJSON('https://vk.com/share.php?act=count&index=1&url=' + encodeURIComponent(location.href) + '&callback=?', function (response) {
+        });
+        if (!window.VK) VK = {};
+        VK.Share = {
+          count: function (index, count) {
+            $('[data-counter="vk"]').text(roundCount(count));
+          }
+        };
+      }
+      ;
+      /*
+       *  Share counter > Facebook
+       *  @see https://developers.facebook.com
+       */
+      if (existCount('[data-counter="fb"]')) {
+        $.getJSON('https://graph.facebook.com/?id=' + encodeURIComponent(location.href) + '&callback=?', function (response) {
+          if (response.share === undefined) $('[data-counter="fb"]').text('0');
+          else $('[data-counter="fb"]').text(roundCount(response.share.share_count));
+        });
+      }
+      ;
+      /*
+       *	Share counter > Odnoklassniki
+       *	@see https://apiok.ru
+       */
+      if (existCount('[data-counter="ok"]')) {
+        $.getJSON('https://connect.ok.ru/dk?st.cmd=extLike&uid=1&ref=' + encodeURIComponent(location.href) + '&callback=?', function (response) {
+        });
+        if (!window.ODKL) ODKL = {};
+        ODKL.updateCount = function (index, count) {
+          $('[data-counter="ok"]').text(roundCount(count));
+        };
+      }
+      ;
+      /*
+       *  Share counter > Google Plus
+       *  @see https://developers.google.com/+/
+       */
+      if (existCount('[data-counter="gp"]')) {
+        $.ajax({
+          type: 'POST',
+          url: 'https://clients6.google.com/rpc',
+          processData: true,
+          contentType: 'application/json',
+          data: JSON.stringify({
+            'method': 'pos.plusones.get',
+            'id': location.href,
+            'params': {
+              'nolog': true,
+              'id': location.href,
+              'source': 'widget',
+              'userId': '@viewer',
+              'groupId': '@self'
+            },
+            'jsonrpc': '2.0',
+            'key': 'p',
+            'apiVersion': 'v1'
+          }),
+          success: function (response) {
+            $('[data-counter="gp"]').text(roundCount(response.result.metadata.globalCounts.count));
+          }
+        });
+      }
+      ;
+      /*
+       *  Share counter > My@Mail.Ru
+       *  @see http://api.mail.ru
+       */
+      if (existCount('[data-counter="mr"]')) {
+        $.getJSON('https://connect.mail.ru/share_count?url_list=' + encodeURIComponent(location.href) + '&callback=1&func=?', function (response) {
+          var url = encodeURIComponent(location.href);
+          for (var url in response) {
+            if (response.hasOwnProperty(url)) {
+              var count = response[url].shares;
+              break;
+            }
+          }
+          if ($.isEmptyObject(response)) $('[data-counter="mr"]').text('0');
+          else $('[data-counter="mr"]').text(roundCount(count));
+        });
+      }
+      ;
+      /*
+       *  Share counter > LinkedIn
+       *  @see https://developer.linkedin.com
+       */
+      if (existCount('[data-counter="li"]')) {
+        $.getJSON('https://www.linkedin.com/countserv/count/share?url=' + encodeURIComponent(location.href) + '&callback=?', function (response) {
+          $('[data-counter="li"]').text(roundCount(response.count));
+        });
+      }
+      /*
+       *  Share counter > tumblr
+       *  @see https://www.tumblr.com/developers
+       */
+      if (existCount('[data-counter="tm"]')) {
+        $.getJSON('https://api.tumblr.com/v2/share/stats?url=' + encodeURIComponent(location.href) + '&callback=?', function (response) {
+          $('[data-counter="tm"]').text(roundCount(response.response.note_count));
+        });
+      }
+      ;
+      /*
+       *  Share counter > Pinterest
+       *  @see https://developers.pinterest.com
+       */
+      if (existCount('[data-counter="pt"]')) {
+        $.getJSON('https://api.pinterest.com/v1/urls/count.json?url=' + encodeURIComponent(location.href) + '&callback=?', function (response) {
+          $('[data-counter="pt"]').text(roundCount(response.count));
+        });
+      }
+      ;
+      /*
+       *  Share counter > Reddit
+       *  @see https://www.reddit.com/dev/api
+       */
+      if (existCount('[data-counter="rd"]')) {
+        $.getJSON('https://www.reddit.com/api/info.json?url=' + encodeURIComponent(location.href) + '&jsonp=?', function (response) {
+          var count = response.data.children;
+          if (count.length === 0) $('[data-counter="rd"]').text('0');
+          else $('[data-counter="rd"]').text(roundCount(count[0].data.score));
+        });
+      }
+      ;
+      /*
+       *  Share counter > StumbleUpon
+       *  @see http://help.stumbleupon.com
+       */
+      if (existCount('[data-counter="su"]')) {
+        $.getJSON('https://query.yahooapis.com/v1/public/yql?q='
+          + encodeURIComponent('select * from html where url="http://www.stumbleupon.com/services/1.01/badge.getinfo?url=' + location.href + '" and xpath="*"') + '&format=json&callback=?', function (response) {
+          var count = $.parseJSON(response.query.results.html.body);
+          if (count.result.views === undefined) $('[data-counter="su"]').text('0');
+          else $('[data-counter="su"]').text(roundCount(count.result.views));
+        });
+      }
+      ;
+      /*
+       *  Share counter > Pocket
+       *  @see https://widgets.getpocket.com/v1/button?count=horizontal&url=[URL_HERE]
+       */
+      if (existCount('[data-counter="po"]')) {
+        $.getJSON('https://query.yahooapis.com/v1/public/yql?q='
+          + encodeURIComponent('select * from html where url="https://widgets.getpocket.com/v1/button?count=horizontal&url=' + location.href + '" and xpath="*"') + '&format=json&callback=?', function (response) {
+          $('[data-counter="po"]').text(roundCount(response.query.results.html.body.div.a.span.em.content));
+        });
+      }
+      ;
+      /*
+       *  Share counter > Buffer
+       *  @see https://buffer.com/developers
+       */
+      if (existCount('[data-counter="bf"]')) {
+        $.getJSON('https://api.bufferapp.com/1/links/shares.json?url=' + encodeURIComponent(location.href) + '&callback=?', function (response) {
+          $('[data-counter="bf"]').text(roundCount(response.shares));
+        });
+      }
+      ;
+      /*
+       *  Share counter > Xing
+       *  @see https://www.xing-share.com/app/share?op=get_share_button;counter=top;url=[URL_HERE]
+       */
+      if (existCount('[data-counter="xi"]')) {
+        $.getJSON('https://query.yahooapis.com/v1/public/yql?q='
+          + encodeURIComponent('select * from html where url="https://www.xing-share.com/app/share?op=get_share_button;counter=top;url=' + location.href + '" and xpath="*"') + '&format=json&callback=?', function (response) {
+          $('[data-counter="xi"]').text(roundCount(response.query.results.html.body.div[0].div[0].span.content));
+        });
+      }
+      ;
+    };
+    /*
+     *  Init click.
+     */
+    $(document).on('click', '.goodshare', function (event) {
+      event.preventDefault();
+      goodshare.init(this);
+    });
+    /*
+     *  Init share counters.
+     */
+    $(document).getCount();
+  });
+})(jQuery, window, document);
+
+
+creatium.init.local(function ($root) {
+    $root.find('.widget-spoiler').each(function () {
+        var $widget = $(this);
+
+        var filter = function () {
+            return $(this).closest('.widget-spoiler')[0] === $widget[0];
+        };
+
+        var $toggle = $widget.find('[cr-spoiler-toggle]').filter(filter);
+        var $container = $widget.find('[cr-spoiler-container]').filter(filter);
+
+        if ($container.hasClass('is-collapsed')) {
+            creatium.lazy.add($widget, function ($el) {
+                $container.show();
+                creatium.lazy.force($container);
+                $container.hide();
+            });
+        }
+
+        $widget.data('api-isCollapsed', $container.hasClass('is-collapsed'));
+
+        $widget.on('toggle', function (event) {
+            // Чтобы внешние спойлеры не реагировали
+            event.stopPropagation();
+
+            $widget.triggerHandler('api-before-toggle');
+
+            if ($widget.data('api-prevent')) {
+                $widget.data('api-prevent', false);
+                return;
+            }
+
+            $toggle.toggleClass('is-collapsed');
+            $container.toggleClass('is-collapsed');
+
+            $toggle.toggleClass('is-expanded');
+            $container.toggleClass('is-expanded');
+
+            $container.stop().slideToggle().promise().always(function () {
+                $widget.data('api-isCollapsed', !$widget.data('api-isCollapsed'));
+
+                $widget.triggerHandler('api-toggle');
+            });
+        });
+
+        $toggle.on('click', function (event) {
+            $widget.trigger('toggle');
+
+            // На случай вложенных $toggle
+            event.stopPropagation();
+        });
+    })
+});
+
+creatium.init.local(function ($root) {
+    creatium.lazy.add($root.find('.widget-stories-panel'), function ($widget) {
+        $widget.find('[cr-stories-panel-highlight]').on('click', function handler(event) {
+            var index = $(event.currentTarget).index();
+
+            var swiper = $('.modal[data-type="stories"]:visible').data('api-swiper');
+
+            if (swiper) swiper.slideTo(index);
+            else setTimeout(handler.bind(this, event), 10);
+        });
+    });
+});
+creatium.init.local(function ($root) {
+    creatium.lazy.add($root.find('.widget-tabs'), function init($widget) {
+        if (!window.Swiper) return setTimeout(function () {
+            init($widget);
+        }, 50);
+
+        var filter = function () {
+            return $(this).closest('.widget')[0] === $widget[0];
+        };
+
+        var $container = $widget.find('.swiper-container').filter(filter);
+        var $next = $widget.find('[cr-slider-next]').filter(filter);
+        var $previous = $widget.find('[cr-slider-previous]').filter(filter);
+        var $pages = $widget.find('[cr-slider-page]').filter(filter);
+        var $index = $widget.find('[cr-slider-index]').filter(filter);
+
+        var params = $container.data();
+
+        var $icons = $widget.find('[cr-slider-page_icon]').filter(filter).filter(function () {
+            return $(this).find('>.svgwrap').length > 1;
+        });
+        $icons.find('>.svgwrap').addClass('hidden');
+
+        var $labels = $widget.find('[cr-slider-page_label]').filter(filter)
+            .filter(function () {
+                return $(this).find('>.textable').length > 1;
+            });
+        $labels.find('>.textable').addClass('hidden');
+
+        var swiper = new Swiper($container.get(0), {
+            nested: $widget.closest('.swiper-container').length,
+            autoHeight: params.fixheight === false,
+            autoplay: params.auto ? {
+                delay: params.pause,
+                stopOnLastSlide: !params.loop,
+            } : false,
+            allowTouchMove: params.touch,
+            effect: params.animated ? 'slide' : 'fade',
+            fadeEffect: { crossFade: true },
+            touchEventsTarget: 'container',
+            mousewheelEventsTarged: 'container',
+            on: {
+                slideChange: function () {
+                    $pages.filter('.is-active').removeClass('is-active');
+                    $pages.eq(swiper.activeIndex).addClass('is-active');
+
+                    setIcon(swiper.oldActiveIndex, swiper.activeIndex);
+                    setImage(swiper.oldActiveIndex, swiper.activeIndex);
+                    setLabel(swiper.oldActiveIndex, swiper.activeIndex);
+
+                    $index.text(swiper.activeIndex + 1);
+
+                    swiper.oldActiveIndex = swiper.activeIndex;
+                },
+            },
+        });
+        $widget.data('api-swiper', swiper);
+
+        swiper._params = params;
+        swiper.oldActiveIndex = swiper.activeIndex;
+
+        setIcon(swiper.oldActiveIndex, swiper.activeIndex);
+
+        function setIcon(oldIndex, newIndex) {
+            $icons.each(function () {
+                var $svgwraps = $(this).children('.svgwrap');
+                $svgwraps.eq(oldIndex).addClass('hidden');
+                $svgwraps.eq(newIndex).removeClass('hidden');
+            });
+        }
+
+        setImage(swiper.oldActiveIndex, swiper.activeIndex);
+
+        function setImage(oldIndex, newIndex) {
+            $icons.each(function () {
+                var $images = $(this).children();
+                $images.eq(oldIndex).addClass('hidden');
+                $images.eq(newIndex).removeClass('hidden');
+            });
+        }
+
+        setLabel(swiper.oldActiveIndex, swiper.activeIndex);
+
+        function setLabel(oldIndex, newIndex) {
+            $labels.each(function () {
+                var $textables = $(this).children('.textable');
+                $textables.eq(oldIndex).addClass('hidden');
+                $textables.eq(newIndex).removeClass('hidden');
+            });
+        }
+
+        $widget.on('slidenext', function (event) {
+            if (swiper.isEnd && params.loop) {
+                swiper.slideTo(0);
+            } else {
+                swiper.slideNext();
+            }
+        });
+
+        $next.on('click', function () {
+            $widget.triggerHandler('slidenext');
+        });
+
+        $widget.on('slideprev', function (event) {
+            if (swiper.isBeginning && params.loop) {
+                swiper.slideTo(swiper.slides.length - 1);
+            } else {
+                swiper.slidePrev();
+            }
+        });
+
+        $previous.on('click', function () {
+            $widget.triggerHandler('slideprev');
+        });
+
+        $pages.on('click', function () {
+            swiper.slideTo($(this).index());
+        });
+
+        $widget.find('.lazy').on('lazyload', _.throttle(function () {
+            swiper.update();
+        }, 500));
+
+        if (swiper.params.autoHeight) {
+            creatium.syncInterval(function () {
+                if (swiper.animating || !swiper.slides.length) return;
+
+                var wrapperHeight = swiper.wrapperEl.clientHeight;
+                var slideHeight = swiper.slides[swiper.activeIndex].clientHeight;
+                if (wrapperHeight !== slideHeight) swiper.update();
+            }, 40);
+        }
+    });
+});
+
+creatium.init.local(function ($root) {
+    $root.find('.widget-video').each(function () {
+        var $widget = $(this);
+
+        var $modal = $widget.closest('.modal');
+        $modal.on('hide', function() {
+            var $iframeWrap = $widget.find('.video-wrapper');
+            return $iframeWrap.attr('src', $iframeWrap.attr('src').replace('autoplay=1', 'autoplay=0'));
+        });
+    });
+});
+})($);
